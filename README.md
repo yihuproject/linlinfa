@@ -1,5 +1,1 @@
-<<<<<<< HEAD
-this is a branch to save my file
-=======
-this is my first that use github upload repositie
->>>>>>> master
+邻邻发项目master分支，主要功能是商户入驻
