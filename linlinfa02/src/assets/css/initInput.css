@@ -1,0 +1,193 @@
+/* input */
+.van-cell.van-field{
+	padding: 0;
+}
+.van-field .van-field__label{
+	max-width: 250px;
+}
+.store_group .van-cell--required::before{
+	font-size: 14PX;
+}
+[data-dpr="1"] .store_group .van-cell--required::before{
+	font-size: 14PX;
+}
+[data-dpr="2"] .store_group .van-cell--required::before{
+	font-size: 28PX;
+}
+[data-dpr="3"] .store_group .van-cell--required::before{
+	font-size: 42PX;
+}
+.van-field .van-field__label span{
+	max-width: 250px;
+	height: 88px;
+	line-height: 88px;
+}
+.van-field .van-field__left-icon i{
+	display: inline-block;
+	height: 80px;
+	line-height: 80px;
+	padding-left: 30px;
+}
+[data-dpr="1"] .van-field .van-field__left-icon i{
+	font-size: 17PX;
+}
+[data-dpr="2"] .van-field .van-field__left-icon i{
+	font-size: 34PX;
+}
+[data-dpr="3"] .van-field .van-field__left-icon i{
+	font-size: 51PX;
+}
+
+.input_center .van-field input.van-field__control{
+	text-align: left;
+	padding-left: 40px;
+	line-height: 80px;
+}
+[data-dpr="1"] .van-field input.van-field__control{
+	font-size: 16PX;
+}
+[data-dpr="2"] .van-field input.van-field__control{
+	font-size: 32PX;
+}
+[data-dpr="3"] .van-field input.van-field__control{
+	font-size: 48PX;
+}
+
+[data-dpr="1"] .van-field{
+	font-size: 16PX;
+}
+[data-dpr="2"] .van-field{
+	font-size: 32PX;
+}
+[data-dpr="3"] .van-field{
+	font-size: 54PX;
+}
+[data-dpr="1"] .van-field.single_tag input.van-field__control{
+	font-size: 16PX;
+	text-align: left;
+}
+[data-dpr="2"] .van-field.single_tag input.van-field__control{
+	font-size: 32PX;
+	text-align: left;
+}
+[data-dpr="3"] .van-field.single_tag input.van-field__control{
+	font-size: 54PX;
+	text-align: left;
+}
+.van-field>.van-cell__title.van-field__label{
+	color:black;
+	font-weight: bold;
+}
+[data-dpr="2"] .van-field>.van-cell__title.van-field__label{
+	color:black;
+	font-weight: bold;
+}
+[data-dpr="3"] .van-field>.van-cell__title.van-field__label{
+	color:black;
+	font-weight: bold;
+	width: 300px;
+}
+/* dialog */
+.van-dialog .van-dialog__header{
+	font-size: 18PX;
+	color:black;
+	line-height: 70px;
+}
+[data-dpr="1"] .van-dialog .van-dialog__header{
+	font-size: 18PX;
+}
+[data-dpr="2"] .van-dialog .van-dialog__header{
+	font-size: 36PX;
+}
+[data-dpr="3"] .van-dialog .van-dialog__header{
+	font-size: 54PX;
+}
+
+.van-dialog .van-dialog__content .van-dialog__message{
+	font-size: 15PX;
+}
+[data-dpr="1"] .van-dialog .van-dialog__content .van-dialog__message{
+	font-size: 15PX;
+}
+[data-dpr="2"] .van-dialog .van-dialog__content .van-dialog__message{
+	font-size: 30PX;
+}
+[data-dpr="3"] .van-dialog .van-dialog__content .van-dialog__message{
+	font-size: 45PX;
+}
+
+.van-dialog .van-dialog__content .van-dialog__message img{
+	width: 490px;
+	height: 330px;
+}
+.van-dialog .van-dialog__content .van-dialog__message p{
+	line-height: 50px;
+	margin: 0 40px;
+}
+.van-dialog .van-hairline--top.van-dialog__footer{
+	border-top:1px solid #D2D3D5;
+	padding-top: 34px;
+	padding-bottom: 34px;
+}
+[data-dpr="1"] .van-dialog .van-hairline--top.van-dialog__footer{
+	border-top:1px solid #D2D3D5;
+	padding-top: 17px;
+	padding-bottom: 17px;
+}
+.van-dialog .van-hairline--top.van-dialog__footer .van-button__text{
+	font-size: 18PX;
+	font-weight: normal;
+}
+[data-dpr="1"] .van-dialog .van-hairline--top.van-dialog__footer .van-button__text{
+	font-size: 18PX;
+}
+[data-dpr="2"] .van-dialog .van-hairline--top.van-dialog__footer .van-button__text{
+	font-size: 36PX;
+}
+[data-dpr="3"] .van-dialog .van-hairline--top.van-dialog__footer .van-button__text{
+	font-size: 54PX;
+}
+/* toast */
+div.van-toast.van-toast--text{
+	min-width: 340px;
+	min-height: 126px;
+	line-height: 63px;
+	border-radius:12px;
+}
+div.van-toast.van-toast--text div{
+	width: 340px;
+	min-height: 63px;
+	text-align: center;
+	padding: 0 31px;
+}
+
+[data-dpr="1"] div.van-toast.van-toast--text div{
+	font-size:14PX;
+}
+[data-dpr="2"] div.van-toast.van-toast--text div{
+	font-size:28PX;
+}
+[data-dpr="3"] div.van-toast.van-toast--text div{
+	font-size:42PX;
+}
+
+/* button */
+.van-button.van-button--info{
+	height: 88px;
+	line-height: 88px;
+	font-size:17PX;
+	color:#fff;
+}
+[data-dpr="1"] .van-button.van-button--info{
+	font-size:17PX;
+}
+[data-dpr="2"] .van-button.van-button--info{
+	font-size:34PX;
+}
+[data-dpr="3"] .van-button.van-button--info{
+	font-size:51PX;
+}
+/* baidu-map baidu LOGO */
+.anchorBL{
+	display: none;
+}
