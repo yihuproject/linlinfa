@@ -181,50 +181,89 @@
 				  confirmButtonText:"知道了"
 				  })
 			},
-			onRead1(file) {
-				// if(file.file.size>=1048576){
-				// 	this.$toast("图片大小不能超过2M");
-				// 	this.imgPath1 = "http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
-				// }else{
-					var formData = new FormData();
-					formData.append("file",file.file);
-					console.log(file);
-					this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
-					.then((data)=>{
-					this.imgPath1="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
-					console.log(data);
-					console.log(data.data.data);
-					localStorage.setItem("face_img",data.data.data);
-					})
-					.catch((err)=>{
-						console.log(this.imgPath3);
-						this.imgPath1="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
-					})
-				// }
-			},
+      ontpys(img){
+            let originWidth = img.width, // 压缩后的宽
+            originHeight=img.height,
+            maxWidth = 400, maxHeight = 400,
+            quality = 0.8, // 压缩质量
+            canvas = document.createElement('canvas'),
+            drawer = canvas.getContext("2d");
+            canvas.width = maxWidth;
+            canvas.height = originHeight/originWidth*maxWidth;
+            drawer.drawImage(img, 0, 0, canvas.width, canvas.height);
+            let base64 = canvas.toDataURL("image/jpeg", quality); // 压缩后的base64图片
+            let file = this.dataURLtoFile(base64,Date.parse(Date())+'.jpg');
+            
+            console.log(file);//压缩后的file
+            
+            var formData = new FormData();
+            formData.append("file",file);
+            this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+            .then((data)=>{
+            	this.imgPath2="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
+            	console.log(file);
+            	localStorage.setItem("store_img",data.data.data);
+              this.$toast().clear();
+            })
+            .catch((err)=>{
+            	console.log(this.imgPath3);
+            	this.imgPath2="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
+            })
+            
+            
+            
+            
+            
+            
+            
+        },
+        //base64转file
+        dataURLtoFile(dataurl,filename){
+        let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr],filename,{type:mime});
+        },
+			onRead1(file){
+            this.$toast.loading({
+                duration: 0,
+                mask: true,
+                forbidClick: false,
+                message: '上传中...'
+                });
+            //console.log(file.content); 
+             console.log(file);//未压缩的file
+             let img = new Image();
+             img.src = file.content;
+             this.dwimg=file.content;
+              let that=this;
+             img.onload=function(){
+                    that.ontpys(img);
+                }
+            //上传成功的图片
+            function fn(){
+                setTimeout(() => {
+                        if(that.imgmurl){
+                             that.dwimg= that.imgmurl;
+                             console.log(that.dwimg);
+                             that.imgmurl='';
+                             that.childhbdbimg();
+                             Toast.clear();
+                        }else{
+                            fn();
+                        }
+                }, 1000); 
+            };
+            fn();
+        },
 			onRead2(file) {
-				// if(file.file.size>=1048576){
-					// this.$toast("图片大小不能超过2M");
-					// this.imgPath2 = "http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
-						// console.log(reader);
-						// console.log(file);
-						// var img = new Image();
-						// img.src = file.content;
-						// console.log(img.src);
-						// var dic = img.width / img.height;
-						// var canvas2 = this.$refs.canvas2;
-						// canvas2.style.width = 120+"px";
-						// canvas2.style.height = 120+"px";
-						// var ctx = canvas2.getContext("2d");
-						// ctx.clearRect(0,0,120,120*dic);
-						// ctx.drawImage(img,0,0,120,120*dic);
-						// var finalURL = ctx.toDataURL();
-						// console.log(finalURL);
-				// }else{
 					var formData = new FormData();
 					formData.append("file",file.file);
 					// formData.append("mypic",file.file);
-					this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})					   .then((data)=>{
+					this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+          .then((data)=>{
 						this.imgPath2="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
 						console.log(file);
 						localStorage.setItem("store_img",data.data.data);

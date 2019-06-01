@@ -10,8 +10,17 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {},
-
+		proxyTable: {
+				'/api': {  
+					target: 'http://47.92.244.60:88',
+					changeOrigin: true, 
+					pathRewrite: {  
+							'^/api': '/',
+							//写'/api'就等于写'https://api.douban.com'
+							//写"/api/v2/movie/top250"就等于写"https://api.douban.com/v2/movie/top250"
+					}  
+			} 
+		},
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST
     port: 8080, // can be overwritten by process.env.PORT, if port is in use, a free one will be determined
@@ -23,7 +32,7 @@ module.exports = {
     // Use Eslint Loader?
     // If true, your code will be linted during bundling and
     // linting errors and warnings will be shown in the console.
-    useEslint: true,
+    useEslint: false,
     // If true, eslint errors and warnings will also be shown in the error overlay
     // in the browser.
     showEslintErrorsInOverlay: false,

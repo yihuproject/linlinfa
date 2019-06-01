@@ -100,7 +100,7 @@
 					this.columns = this.locationList;
 				})
 			},
-			handler ({BMap, map}) {
+			handler ({BMap, map}){
 				if( localStorage.getItem("company_address") == null|| localStorage.getItem("company_address")== ""){
 					let  _this = this;  
 					_this.geolocation = new BMap.Geolocation();
@@ -110,9 +110,11 @@
 							_this.center = r.point;
 							_this.nearby.center = r.point;
                             console.log(_this.nearby);
+                            console.log(r.point);
 						 // request baidu-map value around longtitude and latitude22.55371,113.88311
 							_this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ r.point.lat +","+r.point.lng +"&output=json&pois=1")
 							.then((data)=>{
+                                console.log(data);
 								_this.locationList = data;
 								// set position value in column and load value into DOM
 								_this.columns = _this.locationList.result.pois;
