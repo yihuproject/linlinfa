@@ -111,15 +111,32 @@
 							_this.nearby.center = r.point;
                             console.log(_this.nearby);
                             console.log(r.point);
+              alert(r.point.lng,r.point.lat);
+              const pointBak = new BMap.Point(r.point.lng, r.point.lat);
+              const convertor = new BMap.Convertor();
+              convertor.translate([pointBak], 1, 5,function(resPoint) {
+                console.log(resPoint);
+              })
+              
+              
+              var geo = new BMap.Geocoder();
+              geo.getLocation(new BMap.Point(r.point.lng,r.point.lat),function(rs){
+                console.log(rs);
+                
+                
+              })
+                            
+                            
+                            
 						 // request baidu-map value around longtitude and latitude22.55371,113.88311
-							_this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ r.point.lat +","+r.point.lng +"&output=json&pois=1")
-							.then((data)=>{
-                                console.log(data);
-								_this.locationList = data;
-								// set position value in column and load value into DOM
-								_this.columns = _this.locationList.result.pois;
-                                _this.position = _this.columns[0].name;
-							})
+							// _this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ r.point.lat +","+r.point.lng +"&output=json&pois=1")
+							// .then((data)=>{
+       //          console.log(data);
+							// 	_this.locationList = data;
+							// 	// set position value in column and load value into DOM
+							// 	_this.columns = _this.locationList.result.pois;
+       //                          _this.position = _this.columns[0].name;
+							// })
 						}else {
 							this.$toast("加载失败，请重新进入页面");
 							}        

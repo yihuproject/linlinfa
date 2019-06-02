@@ -19,7 +19,7 @@
 				<p>建议您在证件齐全的时候完成入驻</p>
 			</div>
 			<div class="information_display"  v-for="tmp in processStep">
-				<span>{{tmp.step}}</span>
+				<span class="information_display_title">{{tmp.step}}</span>
 				<div class="text">
 					<p>{{tmp.stepTitle}}</p>
 					<p>{{tmp.stepContent}}</p>
@@ -176,8 +176,10 @@
 				align-items:center
 				padding:29px
 				border-bottom:normalBorder
-				span
+				.information_display_title
+					display:inline-block
 					width: 15px
+					text-align:center
 					padding:8px 8px;
 					height: 17px;
 					line-height: 17px;
@@ -187,7 +189,7 @@
 					margin-top: 24px;
 					color:cwhite
 					font-size:12PX
-				div.text
+				.text
 					width: 373px;
 					height: 180px;
 					margin-left: 20px;
@@ -197,7 +199,7 @@
 					p:nth-child(2)
 						margin-top: 27px;
 						font-size:14PX
-				div.img
+				.img
 					width: 250px;
 					height: 180px;
 					margin-left: 20px;
@@ -225,7 +227,7 @@
 				p:nth-child(2)
 					font-size:font14
 			div.information_display
-				span
+				.information_display_title
 					font-size:font12
 				div.text
 					p:first-child
@@ -250,7 +252,7 @@
 				p:nth-child(2)
 					font-size:font28
 			div.information_display
-				span
+				.information_display_title
 					font-size:font24
 				div.text
 					p:first-child
@@ -275,7 +277,7 @@
 				p:nth-child(2)
 					font-size:font42
 			div.information_display
-				span
+				.information_display_title
 					font-size:font36
 				div.text
 					p:first-child

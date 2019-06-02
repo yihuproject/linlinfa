@@ -14,6 +14,7 @@ import PaymentStatusFailed from '@/components/enter/PaymentStatusFailed'
 import Map from '@/components/enter/map'
 import EnterSuccess from '@/components/enter/EnterSuccess'
 import ManageData from '@/components/ManageData'
+import Test from '@/components/enter/test'
 
 
 Vue.use(Router)
@@ -25,6 +26,11 @@ export default new Router({
 		  path: '/',
 		  component: Enter
 		},
+    {
+    	name: 'test',
+      path: '/test',
+      component: Test
+    },
     {
     	name: 'map',
       path: '/map',
