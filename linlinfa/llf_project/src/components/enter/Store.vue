@@ -200,7 +200,7 @@
             formData.append("file",file);
             this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
             .then((data)=>{
-            	this.imgPath2="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
+            	this.imgPath2=data.data.data;
             	console.log(file);
             	localStorage.setItem("store_img",data.data.data);
               this.$toast().clear();
@@ -209,13 +209,6 @@
             	console.log(this.imgPath3);
             	this.imgPath2="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
             })
-            
-            
-            
-            
-            
-            
-            
         },
         //base64转file
         dataURLtoFile(dataurl,filename){

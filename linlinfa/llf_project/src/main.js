@@ -14,7 +14,7 @@ import 'vant/lib/index.css'
 import VueBetterScroll from 'vue2-better-scroll'
 import VueJsonp from "vue-jsonp"
 axios.defaults.withCredentials = false
-axios.defaults.baseURL = 'http://47.92.244.60:88'
+axios.defaults.baseURL = 'http://47.111.27.189:88'
 axios.defaults.headers = {'Content-Type':'application/x-www-form-urlencoded'}//对象方式传递
 Vue.config.productionTip = false
 Vue.use(Vant)
