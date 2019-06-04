@@ -5,8 +5,14 @@
 				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址" @input="syncCenterAndZoom($event)"/>
 		</van-cell-group>
 		<div class="map_container" ref="map">	
-      <el-amap ref="map" vid="amapDemo" :amap-manager="amapManager" :center="center" :zoom="zoom" :plugin="plugin" :events="events" class="amap-demo">
-      </el-amap>
+			<baidu-map :ak="ak" :center="center" :zoom="zoom"  @ready="handler"  ref="bdmap" :pinch-to-zoom="true" :dragging="true" @zoomend="syncCenterAndZoom($event)" @touchend="syncCenterAndZoom($event)" @dragend="syncCenterAndZoom($event)">
+				<bm-geolocation anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :showAddressBar="true" :autoLocation="true">
+				</bm-geolocation>
+				<bm-marker :position="{lng:center.lng, lat:center.lat}" :icon="{url:icon,size:{width:48,height:48}}">
+				</bm-marker>
+				<bm-local-search :keyword="keyword"  :auto-viewport="true" :location="location" :panel="false"  style="display: none">
+				</bm-local-search>
+			</baidu-map>
 		</div>
 		<div class="van-picker">
 			<vue-better-scroll class="wrapper" ref="scroll" :startY="parseInt(startY)">
@@ -33,8 +39,13 @@
 <script>
 	import Header from "../header"
 	import bus from '../../assets/js/eventBus.js'
-  import { lazyAMapApiLoaderInstance } from 'vue-amap'
-	var map = "map";
+	import BaiduMap from "vue-baidu-map/components/map/Map.vue"
+	import BmMarker from 'vue-baidu-map/components/overlays/Marker'
+	import BmCircle from 'vue-baidu-map/components/overlays/Circle'
+	import BmGeolocation from 'vue-baidu-map/components/controls/Geolocation.vue'
+	import BmLocalSearch from "vue-baidu-map/components/search/LocalSearch.vue"
+	import AutoComplete from "vue-baidu-map/components/others/AutoComplete.vue"
+	
 	export default{
 		data(){
 			return {
@@ -43,7 +54,7 @@
 				center: "",//当前经纬度
 				zoom: 4,//地图显示大小
 				location: "",//location
-        content:"",
+                content:"",
 				keyword: "",//搜索关键词
 				address:"",//地图中的选中地址
 				current:0,//选中的index
@@ -60,9 +71,63 @@
 			}
 		},
 		components:{
-			Header
+			Header,
+			BaiduMap,
+			BmGeolocation,
+			BmMarker,
+			BmLocalSearch,
+			AutoComplete,
+      BmCircle
 		},
 		methods:{
+			syncCenterAndZoom (e) {
+				this.center = e.target.getCenter();
+				// this.zoom = e.target.getZoom();
+        console.log(e.target.getCenter());
+				this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ e.target.getCenter().lat +","+e.target.getCenter().lng +"&output=json&pois=1")
+				.then((data)=>{
+          console.log(data);
+					this.locationList = data;
+					this.columns = this.locationList.result.pois;
+				})
+			},
+			handler ({BMap, map}){
+        
+        var mycity = new BMap.LocalCity();
+        mycity.get(function(result){
+          console.log(result);
+        })
+        let  _this = this;  
+				if( localStorage.getItem("company_address") == null|| localStorage.getItem("company_address")== ""){
+					var geolocation = new BMap.Geolocation();
+          geolocation.enableSDKLocation();
+					geolocation.getCurrentPosition(function(r,error){
+            console.log(r);
+						// if request success ,load value
+						if(this.getStatus() == BMAP_STATUS_SUCCESS){
+							_this.center = r.point;
+              console.log(r.point);      //lat:22.546053549705483   lng:114.02597365999998  浏览器定位  22.548515,114.066112  IP定位
+						 // request baidu-map value around longtitude and latitude    113.920223,22.57831
+							_this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ r.point.lat +","+r.point.lng +"&output=json&pois=1")
+							.then((data)=>{
+                console.log(data);
+								_this.locationList = data;
+								// set position value in column and load value into DOM
+								_this.columns = _this.locationList.result.pois;
+                // _this.position = _this.columns[0].name;
+							})
+						}else {
+							this.$toast("加载失败，请重新进入页面");
+							}        
+						},{enableHighAccuracy: true});   
+				}else{
+          var geo = new BMap.Geocoder();
+          geo.getPoint(localStorage.getItem("company_address"),function(point){
+              console.log(point);
+            _this.center = point;
+          })
+        }
+			},
 			chooseClick(index){
 				this.current = index;
 				this.confirmedAddress = this.columns[this.current].addr;
