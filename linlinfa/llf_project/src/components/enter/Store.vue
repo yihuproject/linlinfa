@@ -24,23 +24,23 @@
 				</van-col>
 			</van-row>
 			<van-row class="store_address">
-				<router-link :to="'/choosecity/'+member_id">
-					<van-col  :span="9">门店地址<i>*</i></van-col>
-					<van-col :span="13" class="tag_location">
-						{{tagLocation}}
-					</van-col>
-					<van-col  :span="2">
-						<van-icon name="arrow"></van-icon>
-					</van-col>
-				</router-link>
+					<a  @touchstart="cccity">
+            <van-col  :span="9">门店地址<i>*</i></van-col>
+            <van-col :span="13" class="tag_location">
+            	{{tagLocation}}
+            </van-col>
+            <van-col  :span="2">
+            	<van-icon name="arrow"></van-icon>
+            </van-col>
+          </a>
 			</van-row>
 			<van-row class="store_location">
-				<router-link :to="'/chooselo/'+member_id">
-					<van-col  :span="9">标记店铺位置</van-col>
-					<van-col  :span="2" :offset="13">
-						<van-icon name="arrow"></van-icon>
-					</van-col>
-				</router-link>
+        <a @touchstart="clocation">
+          <van-col  :span="9">标记店铺位置</van-col>
+          <van-col  :span="2" :offset="13">
+          	<van-icon name="arrow"></van-icon>
+          </van-col>
+        </a>
 			</van-row>
 			<van-row class="store_detail_address">
 				<van-col :span="24">
@@ -100,7 +100,7 @@
 
 <script>
 	import Header from '../header'
-	import bus from '../../assets/js/eventBus.js'
+  import bus from '../../assets/js/eventBus.js'
 	export default {
 		data(){
 			return {
@@ -121,45 +121,48 @@
 				imgPath2:"http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png",
 				imgPath3:"http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png",
 				member_id:"",
+        /*face_img store_img logo_img*/
 			}
 		},
 		components:{
-			Header,
-			
+			Header
 		},
 		mounted(){
-			this.member_id = this.$route.params.member_id;
-			this.$nextTick(function(){
-				bus.$on("getChooseCityValue",(msg)=>{
-					this.tagLocation = msg;
-				});
-				bus.$on("getChooseLocationValue",(msg)=>{
-					this.detailLocation = msg;
-				});
-			})
-			if(localStorage.getItem("member_id")){
-				console.log(localStorage.getItem("member_id"));
-				this.member_id = localStorage.getItem("member_id");
+			if(localStorage.getItem("company_name")){
+				this.member_id = this.$route.params.member_id;
 				this.storeName = localStorage.getItem("company_name");
 				this.contactName = localStorage.getItem("contacts_name");
 				this.contactNumber = localStorage.getItem("contacts_phone");
 				this.tagLocation = localStorage.getItem("company_address");
 				this.detailLocation = localStorage.getItem("company_address_detail");
 				this.imgPath1 = localStorage.getItem("face_img");
-				this.imgPath3 = localStorage.getItem("store_img");
+				this.imgPath2 = localStorage.getItem("store_img");
 				this.imgPath3 = localStorage.getItem("logo_img");
-			}
-			if(localStorage.getItem("company_address_detail")){
-				this.detailLocation = localStorage.getItem("company_address_detail");
 			}else{
-				this.detailLocation = "";
-			}
-		},
-		beforeDestory(){
-			bus.$off("getChooseCityValue");
-			bus.$off("getChooseLocationValue");
+        this.member_id = this.$route.params.member_id;
+        this.tagLocation = localStorage.getItem("company_address");
+        this.detailLocation = localStorage.getItem("company_address_detail");
+        this.$nextTick(function(){
+        	bus.$on("getChooseCityValue",(msg)=>{
+        		this.tagLocation = msg;
+            localStorage.setItem("company_address",msg);
+        	});
+        	bus.$on("getChooseLocationValue",(msg)=>{
+        		this.detailLocation = msg;
+            localStorage.setItem("company_address_detail",msg);
+        	});
+        })
+      }
 		},
 		methods:{
+      toast(){
+        this.$toast.loading({
+            duration: 0,
+            mask: true,
+            forbidClick: false,
+            message: '上传中...'
+            })
+      },
 			showDialog1(){
 				this.$dialog.alert({
 				  title: '门脸照示意图',
@@ -185,7 +188,7 @@
             let originWidth = img.width, // 压缩后的宽
             originHeight=img.height,
             maxWidth = 400, maxHeight = 400,
-            quality = 0.8, // 压缩质量
+            quality = 0.7, // 压缩质量
             canvas = document.createElement('canvas'),
             drawer = canvas.getContext("2d");
             canvas.width = maxWidth;
@@ -193,94 +196,154 @@
             drawer.drawImage(img, 0, 0, canvas.width, canvas.height);
             let base64 = canvas.toDataURL("image/jpeg", quality); // 压缩后的base64图片
             let file = this.dataURLtoFile(base64,Date.parse(Date())+'.jpg');
-            
             console.log(file);//压缩后的file
-            
-            var formData = new FormData();
-            formData.append("file",file);
-            this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
-            .then((data)=>{
-            	this.imgPath2=data.data.data;
-            	console.log(file);
-            	localStorage.setItem("store_img",data.data.data);
-              this.$toast().clear();
-            })
-            .catch((err)=>{
-            	console.log(this.imgPath3);
-            	this.imgPath2="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
-            })
+            return file;
         },
-        //base64转file
-        dataURLtoFile(dataurl,filename){
-        let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
-            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-        while(n--){
-            u8arr[n] = bstr.charCodeAt(n);
-        }
-        return new File([u8arr],filename,{type:mime});
+    //base64转file
+    dataURLtoFile(dataurl,filename){
+      let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+          bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      while(n--){
+          u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr],filename,{type:mime});
         },
 			onRead1(file){
-            this.$toast.loading({
-                duration: 0,
-                mask: true,
-                forbidClick: false,
-                message: '上传中...'
-                });
-            //console.log(file.content); 
-             console.log(file);//未压缩的file
-             let img = new Image();
-             img.src = file.content;
-             this.dwimg=file.content;
+            this.toast();
+            if(file.file.size>1034333){
+              console.log(file);//未压缩的file
+              let img = new Image();
+              img.src = file.content;
+              this.dwimg=file.content;
               let that=this;
-             img.onload=function(){
-                    that.ontpys(img);
-                }
-            //上传成功的图片
-            function fn(){
-                setTimeout(() => {
-                        if(that.imgmurl){
-                             that.dwimg= that.imgmurl;
-                             console.log(that.dwimg);
-                             that.imgmurl='';
-                             that.childhbdbimg();
-                             Toast.clear();
-                        }else{
-                            fn();
-                        }
-                }, 1000); 
-            };
-            fn();
+              img.onload=function(){
+                     var successFile = that.ontpys(img);
+                     console.log(that.ontpys(img));
+                     var formData = new FormData();
+                     formData.append("file",successFile);
+                     that.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+                     .then((data)=>{
+                     	that.imgPath1=data.data.data;
+                     	console.log(successFile);
+                       that.$toast().clear();
+                     })
+                     .catch((err)=>{
+                     	console.log(that.imgPath1);
+                     	that.imgPath1="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
+                     })
+                 }
+            }else{
+              console.log(file);//未压缩的file
+              var formData = new FormData();
+              formData.append("file",file.file);
+              this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+              .then((data)=>{
+              	this.imgPath1=data.data.data;
+              	console.log(file.file);
+                this.$toast().clear();
+              })
+              .catch((err)=>{
+              	console.log(this.imgPath1);
+              	this.imgPath1="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
+              })
+            }
         },
 			onRead2(file) {
-					var formData = new FormData();
-					formData.append("file",file.file);
-					// formData.append("mypic",file.file);
-					this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+        this.toast();
+        console.log(file);//未压缩的file
+        if(file.file.size>1034333){
+          let img = new Image();
+          img.src = file.content;
+          this.dwimg=file.content;
+           let that=this;
+          img.onload=function(){
+            var successFile = that.ontpys(img);
+            console.log(that.ontpys(img));
+            var formData = new FormData();
+            formData.append("file",successFile);
+            that.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+            .then((data)=>{
+            	that.imgPath2=data.data.data;
+            	console.log(successFile);
+              that.$toast().clear();
+            })
+            .catch((err)=>{
+            	console.log(that.imgPath2);
+            	that.imgPath2="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
+            })
+          }
+        }else{
+          console.log(file);//未压缩的file
+          var formData = new FormData();
+          formData.append("file",file.file);
+          this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
           .then((data)=>{
-						this.imgPath2="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
-						console.log(file);
-						localStorage.setItem("store_img",data.data.data);
-					})
-					.catch((err)=>{
-						console.log(this.imgPath3);
-						this.imgPath2="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
-					})
-				// }
+          	this.imgPath2=data.data.data;
+          	console.log(file.file);
+          	localStorage.setItem("store_img",data.data.data);
+            this.$toast().clear();
+          })
+          .catch((err)=>{
+          	console.log(this.imgPath2);
+          	this.imgPath2="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
+          })
+        }
 			},
 			onRead3(file) {
-					var formData = new FormData();
-					formData.append("file",file.file);
-					this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})						.then((data)=>{
-						this.imgPath3="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
-						localStorage.setItem("logo_img",data.data.data);
-					})
-					.catch((err)=>{
-						console.log(this.imgPath3);
-						this.imgPath3="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
-					})
+        this.toast();
+        console.log(file);//未压缩的file
+        if(file.file.size>1034333){
+          let img = new Image();
+          img.src = file.content;
+          this.dwimg=file.content;
+           let that=this;
+          img.onload=function(){
+            var successFile = that.ontpys(img);
+            console.log(that.ontpys(img));
+            var formData = new FormData();
+            formData.append("file",successFile);
+            that.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+            .then((data)=>{
+            	that.imgPath3=data.data.data;
+            	console.log(successFile);
+            	localStorage.setItem("store_img",data.data.data);
+              that.$toast().clear();
+            })
+            .catch((err)=>{
+            	console.log(that.imgPath3);
+            	that.imgPath3="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
+            })
+          }
+        }else{
+          console.log(file);//未压缩的file
+          var formData = new FormData();
+          formData.append("file",file.file);
+          this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+          .then((data)=>{
+          	this.imgPath3=data.data.data;
+          	console.log(file.file);
+            this.$toast().clear();
+          })
+          .catch((err)=>{
+          	console.log(this.imgPath3);
+          	this.imgPath3="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png";
+          })
+        }
 			},
-			next(){
-				console.log(this.$route.params);
+			cccity(){
+        this.$router.push("/choosecity/"+this.member_id);
+        localStorage.setItem("company_name",this.storeName);
+        localStorage.setItem("contacts_name",this.contactName);
+        localStorage.setItem("contacts_phone",this.contactNumber);
+      },
+      clocation(){
+        this.$router.push("/chooselo/"+this.member_id);
+        localStorage.setItem("company_name",this.storeName);
+        localStorage.setItem("contacts_name",this.contactName);
+        localStorage.setItem("contacts_phone",this.contactNumber);
+      },
+      next(){
+        console.log(this.tagLocation);
 				let checkStoreName = /^[\u4e00-\u9fa5A-Za-z0-9-_]{1,20}$/;
 				let checkcontactName = /^[\u4e00-\u9fa5]{1,5}$/;
 				var regexpLocation =  /^([\u4e00-\u9fa5a-zA-Z0-9]{0,50})$/;
@@ -300,28 +363,39 @@
 								if(!regexpLocation.test(this.detailLocation)||this.detailLocation==""){
 									this.$toast("请检查位置是否标记或输入正确");
 								}else{
-									if(this.imgPath1=="icon_bnt_sczzpz@2x.png"||this.imgPath2=="icon_bnt_sczzpz@2x.png"||this.imgPath3=="icon_bnt_sczzpz@2x.png"){
-										// this.$router.push('/ident/'+this.member_id);
-										this.$toast("请检查图片是否上传");
+									if(this.imgPath1=="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png"||this.imgPath2=="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png"||this.imgPath3=="http://prh73mph5.bkt.clouddn.com/icon_bnt_sczzpz@2x.png"){
+                    this.$toast("图片未上传，请检查网络");
 									}else{
 										this.$router.push('/ident/'+this.member_id);
-										localStorage.setItem("member_id",this.member_id);
-										localStorage.setItem("company_name",this.storeName);
-										localStorage.setItem("contacts_name",this.contactName);
-										localStorage.setItem("contacts_phone",this.contactNumber);
-										localStorage.setItem("company_address",this.tagLocation);
-										localStorage.setItem("company_address_detail",this.detailLocation);
+                    localStorage.setItem("member_id",this.member_id);
+                    localStorage.setItem("company_name",this.storeName);
+                    localStorage.setItem("contacts_name",this.contactName);
+                    localStorage.setItem("contacts_phone",this.contactNumber);
+                    localStorage.setItem("company_address",this.tagLocation);
+                    localStorage.setItem("company_address_detail",this.detailLocation);
+                    localStorage.setItem("face_img",this.imgPath1);
+                    localStorage.setItem("store_img",this.imgPath2);
+                    localStorage.setItem("logo_img",this.imgPath3);
+                    console.log(this.member_id);
+                    console.log(this.storeName);
+                    console.log(this.contactName);
+                    console.log(this.contactNumber);
+                    console.log(this.tagLocation);
+                    console.log(this.detailLocation);
+                    console.log(this.imgPath1);
+                    console.log(this.imgPath2);
+                    console.log(this.imgPath3);
 									}
 								}
 							}
 						}
 					}
 				}
-				//next justice
-			}
+			}//next justice
 		}
 	}
 </script>
+
 <style scoped lang="stylus">
 div#app
 	div.store
@@ -394,8 +468,10 @@ div#app
 							color:cgray9
 							font-size:17PX
 					& .tag_location
-						width: 405px
+						width: 390px
 						height: 88px
+						text-align:right
+						padding-right: 15px
 						ellipsis()
 						color:cgray9
 			.store_location

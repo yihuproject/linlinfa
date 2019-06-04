@@ -1,48 +1,48 @@
 <template>
 	<div>
 		<Header :title="msg"></Header>
-			<div class="data_list" ref="homePage">
+			<div class="data_list">
 				<van-row>
 					<van-col :span="6" :offset="1">
-						<div class="container_icon" v-show="ProvinceBtnShow" @click="toggleProvince">
+						<div class="container_icon">
 							<div>
-								<van-icon name="success" v-show="CityBtnShow"></van-icon>
+								<van-icon name="success"></van-icon>
 								<p>{{ProvinceValue}}</p>
 							</div>
 						</div>
 					</van-col>
-					<van-col :span="6" :offset="1">
-						<div class="container_icon" v-show="CityBtnShow" @click="toggleCity">
+					<van-col  v-if="ProvinceValue!='请选择省…'" :span="6" :offset="1">
+						<div class="container_icon">
 							<div>
-								<van-icon name="success"  v-show="AreaBtnShow"></van-icon>
+								<van-icon name="success" ></van-icon>
 								<p>{{CityValue}}</p>
 							</div>
 						</div>
 					</van-col>
-					<van-col :span="6" :offset="1">
-						<div class="container_icon" v-show="AreaBtnShow" @click="toggleArea">
+					<van-col  v-if="CityValue!='请选择市…'" :span="6" :offset="1">
+						<div class="container_icon">
 							<div>
-								<van-icon name="success" v-show="chooseStatus"></van-icon>
+								<van-icon name="success" ></van-icon>
 								<p>{{AreaValue}}</p>
 							</div>
 						</div>
 					</van-col>
 				</van-row>
-				<vue-better-scroll v-show="ProvinceShow"  ref="scroll1" :startY="parseInt(startY1)">
+				<vue-better-scroll  v-if="ProvinceValue=='请选择省…'"  ref="scroll1" :startY="parseInt(startY1)">
 				<ul>
 					<li @click="ProvinceClick($event,index)"  v-for="(item1,index) in items" :key="item1.id">{{item1.province}}</li>
 					<li></li>
 				</ul>
 				</vue-better-scroll>
-				<vue-better-scroll  v-show="CityShow" ref="scroll2" :startY="parseInt(startY2)">
+				<vue-better-scroll    v-if="CityValue=='请选择市…'" ref="scroll2" :startY="parseInt(startY2)">
 				<ul>
-					<li @click="CitiesClick($event,index)" v-for="(item2,index) in items[provinceIndex].children" :key="item2.id">{{item2.city}}</li>
+					<li @click="CitiesClick($event,index)" v-if="ProvinceValue" v-for="(item2,index) in items[provinceIndex].children" :key="item2.id">{{item2.city}}</li>
 					<li></li>
 				</ul>
 				</vue-better-scroll>
-				<vue-better-scroll  v-show="AreaShow" ref="scroll3" :startY="parseInt(startY3)">
+				<vue-better-scroll  v-if="CityValue!='请选择市…'" ref="scroll3" :startY="parseInt(startY3)">
 				<ul>
-					<li @click="AreaClick($event,index)" :key="item3.id" v-for="(item3,index) in items[provinceIndex].children[cityIndex].children">{{item3.area}}</li>
+					<li @click="AreaClick($event,index)" v-if="CityValue" :key="item3.id" v-for="(item3,index) in items[provinceIndex].children[cityIndex].children">{{item3.area}}</li>
 					<li></li>
 				</ul>
 				</vue-better-scroll>
@@ -53,6 +53,7 @@
 <script>
 	import Header from "../../components/header"
 	import bus from '../../assets/js/eventBus.js'
+  import vueBetterScroll from 'vue2-better-scroll'
 	export default{
 		data(){
 			return {
@@ -62,9 +63,6 @@
 				AreaValue:"请选择区…",
 				locationValue:"",
 				clientHeight:"",
-				ProvinceShow:true,
-				CityShow:false,
-				AreaShow:false,
 				ProvinceBtnShow:true,
 				CityBtnShow:false,
 				AreaBtnShow:false,
@@ -76,14 +74,14 @@
 				scrollToX1: 0,
 				scrollToY1: 0,
 				scrollToTime1: 700,
-                startY2: 0, // 纵轴方向初始化位置
-                scrollToX2: 0,
-                scrollToY2: 0,
-                scrollToTime2: 700,
-                startY3: 0, // 纵轴方向初始化位置
-                scrollToX3: 0,
-                scrollToY3: 0,
-                scrollToTime3: 700,
+        startY2: 0, // 纵轴方向初始化位置
+        scrollToX2: 0,
+        scrollToY2: 0,
+        scrollToTime2: 700,
+        startY3: 0, // 纵轴方向初始化位置
+        scrollToX3: 0,
+        scrollToY3: 0,
+        scrollToTime3: 700,
 				member_id:"",
 				items:[
 					{
@@ -128,23 +126,9 @@
 		},
 		components:{
 			Header,
+      vueBetterScroll
 		},
 		methods:{
-				toggleProvince(){
-					this.ProvinceShow = true;
-					this.CityShow = false;
-					this.AreaShow = false;
-				},
-				toggleCity(){
-					this.ProvinceShow = false;
-					this.CityShow = true;
-					this.AreaShow = false;
-				},
-				toggleArea(){
-					this.ProvinceShow = false;
-					this.CityShow = false;
-					this.AreaShow = true;
-				},
 				ProvinceClick(e,index){
 					this.ProvinceValue = e.currentTarget.innerText;
 					if(this.ProvinceValue){
@@ -182,44 +166,18 @@
 					}else{
 						bus.$emit("getChooseCityValue",this.locationValue);
 						this.$router.push("/store/"+this.member_id);
-						console.log(this.locationValue);
-						console.log(this.member_id);
 						localStorage.setItem("company_address",this.locationValue);
 					}
 				},
 				scrollTo1() {
 							this.$refs.scroll1.scrollTo1(this.scrollToX1, this.scrollToY1, this.scrollToTime1);
 				},
-                scrollTo2() {
-                			this.$refs.scroll2.scrollTo2(this.scrollToX2, this.scrollToY2, this.scrollToTime2);
-                },
-                scrollTo3() {
-                			this.$refs.scroll3.scrollTo3(this.scrollToX3, this.scrollToY3, this.scrollToTime3);
-                }
-		},
-		mounted(){
-			console.log("a");
-			console.log(this.$refs.homePage);
-			var height = window.innerHeight;
-			var devicePixelRatio = window.devicePixelRatio;
-			var isAndroid = window.navigator.appVersion.match(/android/gi);
-			var isIPhone = window.navigator.appVersion.match(/iphone/gi);
-			    if (isIPhone) {
-			        if (devicePixelRatio >= 3) {
-						// isIPhone  dpr = 3
-			            this.$refs.homePage.style.height = height - 50 + "px";
-			        } else if (devicePixelRatio >= 2){
-						// isIPhone dpr = 2
-			            this.$refs.homePage.style.height = height -40 + "px";
-			        } else {
-						// isIPhone dpr = 1
-			            this.$refs.homePage.style.height = height - 45 + "px";
-			        }
-			    } else {
-			        //  isAndroid dpr = 1
-					this.$refs.homePage.style.height = height - 45 + "px";
-			    }
-
+        scrollTo2() {
+        			this.$refs.scroll2.scrollTo2(this.scrollToX2, this.scrollToY2, this.scrollToTime2);
+        },
+        scrollTo3() {
+        			this.$refs.scroll3.scrollTo3(this.scrollToX3, this.scrollToY3, this.scrollToTime3);
+        }
 		},
 		created(){
 			this.member_id = this.$route.params.member_id;
@@ -245,6 +203,7 @@
 		width: totalWid
 		background:cwhite
 		overflow:hidden
+		height: 94vh
 		ul
 			background:cwhite
 			li

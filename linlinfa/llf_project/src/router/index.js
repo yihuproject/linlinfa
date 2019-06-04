@@ -49,10 +49,7 @@ export default new Router({
 		{
 		  path: '/store/:member_id',
 		  name: 'store',
-		  component: Store,
-			meta:{
-				keepAlive:true
-			}
+		  component: Store
 		},
 		{
 		  path: '/choosecity/:member_id',

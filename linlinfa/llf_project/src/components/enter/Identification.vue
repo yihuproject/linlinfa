@@ -24,7 +24,7 @@
 			</van-row>
 			<van-row class="id_photo_upload">
 				<van-col :span="24">
-					<van-uploader :after-read="onRead1" :class="{active:isIDPhoto == true}" accept="image/gif,image/jpeg,image/png" :max-size="1048576">
+					<van-uploader :after-read="onRead1" :class="{active:isIDPhoto == true}" accept="image/gif,image/jpeg,image/png">
 						<van-icon :name="IDPhotoPath" />
 						<p :class="{active:isIDPhoto == false}">点击拍摄/上传证件</p>
 					</van-uploader>
@@ -89,47 +89,125 @@
 		components:{
 			Header,
 		},
+    created(){
+    	this.member_id = this.$route.params.member_id;
+    },
 		methods:{
-			onRead1(file){
-				this.file = file;
-				console.log(this.file.file);
-				console.log(this.file.file.name);
-				console.log(file.file.name);
-				// if(file.file.size>=1048576){
-				// 	this.$toast('图片大小不能超过2M');
-				// 	this.IDPhotoPath="plus";
-				// }else{
-					var formData = new FormData();
-					formData.append("file",file.file);
-					this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
-					.then((data)=>{
-					this.IDPhotoPath="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
-					this.isIDPhoto = true;
-					localStorage.setItem("ID_card",data.data.data);
-					})
-				// }
-				
+      ontpys(img){
+        let originWidth = img.width, // 压缩后的宽
+        originHeight=img.height,
+        maxWidth = 400, maxHeight = 400,
+        quality = 0.7, // 压缩质量
+        canvas = document.createElement('canvas'),
+        drawer = canvas.getContext("2d");
+        canvas.width = maxWidth;
+        canvas.height = originHeight/originWidth*maxWidth;
+        drawer.drawImage(img, 0, 0, canvas.width, canvas.height);
+        let base64 = canvas.toDataURL("image/jpeg", quality); // 压缩后的base64图片
+        let file = this.dataURLtoFile(base64,Date.parse(Date())+'.jpg');
+        console.log(file);//压缩后的file
+        return file;
+    },
+    //base64转file
+    dataURLtoFile(dataurl,filename){
+      let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+          bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+      while(n--){
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr],filename,{type:mime});
+    },
+    toast(){
+        this.$toast.loading({
+            duration: 0,
+            mask: true,
+            forbidClick: false,
+            message: '上传中...'
+            })
+    },
+      onRead1(file){
+        this.toast();
+        if(file.file.size>1034333){
+          console.log(file);//未压缩的file
+          let img = new Image();
+          img.src = file.content;
+          this.dwimg=file.content;
+          let that=this;
+          img.onload=function(){
+            var successFile = that.ontpys(img);
+            console.log(that.ontpys(img));
+            var formData = new FormData();
+            formData.append("file",successFile);
+            that.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+            .then((data)=>{
+              that.$toast().clear();
+              that.IDPhotoPath= data.data.data;
+              that.isIDPhoto = true;
+              console.log(successFile);
+              localStorage.setItem("ID_card",data.data.data);
+            })
+            .catch((err)=>{
+            	console.log(that.IDPhotoPath);
+            	that.IDPhotoPath="plus";
+            })
+             }
+        }else{
+          var formData = new FormData();
+          formData.append("file",file.file);
+          this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+          .then((data)=>{
+            this.$toast().clear();
+            this.IDPhotoPath=data.data.data;
+            this.isIDPhoto = true;
+            localStorage.setItem("ID_card",data.data.data);
+          })
+          .catch((err)=>{
+          	console.log(this.IDPhotoPath);
+          	this.IDPhotoPath="plus";
+          })
+        }
 			},
 			onRead2(file){
-				this.file = file;
-				console.log(this.file.file);
-				console.log(this.file.file.name);
-				console.log(file.file.name);
-				// if(file.file.size>=1048576){
-				// 	this.$toast('图片大小不能超过2M');
-				// 	this.licensePhotoPath="plus";
-				// }else{
-					var formData = new FormData();
-					formData.append("file",file.file);
-					this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
-					.then((data)=>{
-					this.licensePhotoPath="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
-					// this.imgPath1="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
-					this.islicensePhoto = true;
-					localStorage.setItem("business_licence_number_electronic",data.data.data);
-					})
-				// }
-				
+        this.toast();
+        if(file.file.size>1034333){
+          console.log(file);//未压缩的file
+          let img = new Image();
+          img.src = file.content;
+          this.dwimg=file.content;
+          let that=this;
+          img.onload=function(){
+            var successFile = that.ontpys(img);
+            console.log(that.ontpys(img));
+            var formData = new FormData();
+            formData.append("file",successFile);
+            that.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+            .then((data)=>{
+              that.$toast().clear();
+              that.licensePhotoPath= data.data.data;
+              that.islicensePhoto = true;
+              console.log(file.file);
+              localStorage.setItem("business_licence_number_electronic",data.data.data);
+            })
+            .catch((err)=>{
+            	console.log(that.licensePhotoPath);
+            	that.licensePhotoPath="plus";
+            })
+             }
+        }else{
+          var formData = new FormData();
+          formData.append("file",file.file);
+          this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+          .then((data)=>{
+            this.$toast().clear();
+            this.licensePhotoPath=data.data.data;
+            this.islicensePhoto = true;
+            localStorage.setItem("business_licence_number_electronic",data.data.data);
+          })
+          .catch((err)=>{
+          	console.log(this.licensePhotoPath);
+          	this.licensePhotoPath="plus";
+          })
+        }
 			},
 			next(){
 				var regExpRealName = /^[\u4e00-\u9fa5]{1,5}$/;
@@ -144,6 +222,11 @@
 							this.$toast("请检查图片是否上传");
 							localStorage.setItem("business_sphere",this.realName);
 							localStorage.setItem("business_licence_number",this.IDnumber);
+              
+              this.$router.push("/classify/"+this.member_id);
+              localStorage.setItem("business_sphere",this.realName);
+              localStorage.setItem("business_sphere",this.realName);
+              localStorage.setItem("business_licence_number",this.IDnumber);
 						}else{
 							this.$router.push("/classify/"+this.member_id);
 							localStorage.setItem("business_sphere",this.realName);
@@ -153,10 +236,6 @@
 						}
 					}
 				}
-			},
-			created(){
-				this.member_id = this.$route.params.member_id;
-				console.log(this.member_id);
 			}
 	}
 </script>
@@ -210,14 +289,12 @@ div.identification
 		.id_photo_upload
 			height: 360px
 			margin: 0 15px
+			uploadBorder()
 			.van-col
 				height: 360px
-				width: 690px
-				uploadBorder()
 				.van-uploader
 					height: 172px
-					width: 690px
-					margin:(360px/2) - (94px/2) 0
+					margin:(320px/2) - (94px/2) 0
 					display:flex
 					flex-flow:column wrap
 					align-items:center
@@ -286,14 +363,12 @@ div.identification
 		.license_uload
 			height: 360px
 			margin: 0 15px
+			uploadBorder()
 			.van-col
 				height: 360px
-				width: 690px
-				uploadBorder()
 				.van-uploader
 					height: 172px
-					width: 690px
-					margin:(360px/2) - (94px/2) 0
+					margin:(320px/2) - (94px/2) 0
 					display:flex
 					flex-flow:column wrap
 					align-items:center

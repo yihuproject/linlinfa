@@ -1,5 +1,5 @@
 <template>
-	<div class="payment_waiting" ref="homePage">
+	<div class="payment_waiting">
 		<Header :title="msg" :history="history"></Header>
 		<van-row>
 			<van-col :span="24"  class="clock">
@@ -32,28 +32,7 @@
 		},
 		components:{
 			Header,
-		},
-		mounted(){
-			var height = window.innerHeight;
-			var devicePixelRatio = window.devicePixelRatio;
-			var isAndroid = window.navigator.appVersion.match(/android/gi);
-			var isIPhone = window.navigator.appVersion.match(/iphone/gi);
-			    if (isIPhone) {
-			        if (devicePixelRatio >= 3) {
-						// isIPhone  dpr = 3
-			            this.$refs.homePage.style.height =height + "px";
-			        } else if (devicePixelRatio >= 2){
-						// isIPhone dpr = 2
-			            this.$refs.homePage.style.height = height + "px";
-			        } else {
-						// isIPhone dpr = 1
-			            this.$refs.homePage.style.height = height + "px";
-			        }
-			    } else {
-			        //  isAndroid dpr = 1
-					this.$refs.homePage.style.height = height + "px";
-			    }
-		},
+		}
 	}
 </script>
 
@@ -61,6 +40,7 @@
 .payment_waiting
 	background:cwhite
 	overflow:hidden
+	height: 95vh
 	.van-col.clock
 		height: 200px;
 		margin-top: 100px

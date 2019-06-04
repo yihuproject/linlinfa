@@ -17,16 +17,8 @@
 			returnPage(){
 				if(this.history == 0){
 				}else if(this.history == "a"){
-                    this.$dialog.confirm({
-                        message:"alert"
-                    })
-                    .then((data)=>{
-                        window.location.href = "http://www.baidu.com";
-                    })
-                    .catch((err)=>{
-                        
-                    })
-            } else{
+            this.$router.push("/exit");
+            }else{
 					this.$router.go(-1);
 				}
 			},
@@ -50,6 +42,10 @@
 		height: headerHei
 		background:headerBack
 		font-size:font18
+		position:fixed
+		top: 0
+		left: 0
+		z-index:15
 		flex()
 		justify-content:space-between
 		font-weight:normal

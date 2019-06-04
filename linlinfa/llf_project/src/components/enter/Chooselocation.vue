@@ -2,18 +2,11 @@
 	<div class="chooselocation" ref="homePage">
 		<Header :title="msg"></Header>
 		<van-cell-group class="input_lo input_center">
-				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址"/>
+				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址" @input="syncCenterAndZoom($event)"/>
 		</van-cell-group>
 		<div class="map_container" ref="map">	
-			<baidu-map :ak="ak" :center="center" :zoom="zoom"  @ready="handler"  ref="bdmap" :pinch-to-zoom="true" :dragging="true" @zoomend="syncCenterAndZoom($event)" @touchend="syncCenterAndZoom($event)" @dragend="syncCenterAndZoom($event)">
-				<bm-geolocation anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :showAddressBar="true" :autoLocation="true">
-				</bm-geolocation>
-				<bm-marker :position="{lng:center.lng, lat:center.lat}" :icon="{url:icon,size:{width:48,height:48}}">
-				</bm-marker>
-				<bm-local-search :keyword="keyword"  :auto-viewport="true" :location="location" :nearby="nearby" :panel="false"  style="display: none">
-				</bm-local-search>
-                <bm-circle :center="nearby.center" :radius="nearby.radius"></bm-circle>
-			</baidu-map>
+      <el-amap ref="map" vid="amapDemo" :amap-manager="amapManager" :center="center" :zoom="zoom" :plugin="plugin" :events="events" class="amap-demo">
+      </el-amap>
 		</div>
 		<div class="van-picker">
 			<vue-better-scroll class="wrapper" ref="scroll" :startY="parseInt(startY)">
@@ -40,30 +33,17 @@
 <script>
 	import Header from "../header"
 	import bus from '../../assets/js/eventBus.js'
-	import BaiduMap from "vue-baidu-map/components/map/Map.vue"
-	import BmMarker from 'vue-baidu-map/components/overlays/Marker'
-	import BmCircle from 'vue-baidu-map/components/overlays/Circle'
-	import BmGeolocation from 'vue-baidu-map/components/controls/Geolocation.vue'
-	import BmLocalSearch from "vue-baidu-map/components/search/LocalSearch.vue"
-	import AutoComplete from "vue-baidu-map/components/others/AutoComplete.vue"
-	
+  import { lazyAMapApiLoaderInstance } from 'vue-amap'
+	var map = "map";
 	export default{
 		data(){
 			return {
 				msg:"选择位置",
-				ak:"efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW",
+				ak:"2KrGibP5ES5RSW38Rq3O0w01u5vUncXQ",
 				center: "",//当前经纬度
-                 nearby: {
-                    center: {
-                      lng: 116.404, 
-                      lat: 39.915
-                    },
-                    radius: 1000
-                  },
-                searchPois:null,
-				zoom: 16,//地图显示大小
+				zoom: 4,//地图显示大小
 				location: "",//location
-                content:"",
+        content:"",
 				keyword: "",//搜索关键词
 				address:"",//地图中的选中地址
 				current:0,//选中的index
@@ -74,77 +54,15 @@
 				scrollToY: 0,
 				scrollToTime: 700,
 				locationList:[],//用来过度赋值的数据
-				geolocation:null,
 				columns:[],
 				icon:"http://prh73mph5.bkt.clouddn.com/icon_lc_xhao@2x.png",
 				member_id:"",
 			}
 		},
 		components:{
-			Header,
-			BaiduMap,
-			BmGeolocation,
-			BmMarker,
-			BmLocalSearch,
-			AutoComplete,
-            BmCircle
+			Header
 		},
 		methods:{
-			syncCenterAndZoom (e) {
-				this.center = e.target.getCenter();
-				this.zoom = e.target.getZoom();
-                console.log(e.target.getCenter());
-				this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ e.target.getCenter().lat +","+e.target.getCenter().lng +"&output=json&pois=1")
-				.then((data)=>{
-					this.locationList = data.result.pois;
-					this.columns = this.locationList;
-				})
-			},
-			handler ({BMap, map}){
-				if( localStorage.getItem("company_address") == null|| localStorage.getItem("company_address")== ""){
-					let  _this = this;  
-					_this.geolocation = new BMap.Geolocation();
-					_this.geolocation.getCurrentPosition(function(r){
-						// if request success ,load value
-						if(this.getStatus() == BMAP_STATUS_SUCCESS){
-							_this.center = r.point;
-							_this.nearby.center = r.point;
-                            console.log(_this.nearby);
-                            console.log(r.point);
-              alert(r.point.lng,r.point.lat);
-              const pointBak = new BMap.Point(r.point.lng, r.point.lat);
-              const convertor = new BMap.Convertor();
-              convertor.translate([pointBak], 1, 5,function(resPoint) {
-                console.log(resPoint);
-              })
-              
-              
-              var geo = new BMap.Geocoder();
-              geo.getLocation(new BMap.Point(r.point.lng,r.point.lat),function(rs){
-                console.log(rs);
-                
-                
-              })
-                            
-                            
-                            
-						 // request baidu-map value around longtitude and latitude22.55371,113.88311
-							// _this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ r.point.lat +","+r.point.lng +"&output=json&pois=1")
-							// .then((data)=>{
-       //          console.log(data);
-							// 	_this.locationList = data;
-							// 	// set position value in column and load value into DOM
-							// 	_this.columns = _this.locationList.result.pois;
-       //                          _this.position = _this.columns[0].name;
-							// })
-						}else {
-							this.$toast("加载失败，请重新进入页面");
-							}        
-						},{enableHighAccuracy: true});   
-				}else{
-                    this.center = localStorage.getItem("company_address");
-                }
-			},
 			chooseClick(index){
 				this.current = index;
 				this.confirmedAddress = this.columns[this.current].addr;
@@ -153,7 +71,8 @@
 				this.$refs.scroll.scrollTo(this.scrollToX, this.scrollToY, this.scrollToTime)
 			},
 			next(){
-				if(this.confirmedAddress==""||this.confirmedAddress==undefined){
+        console.log(this.center);
+				if(this.confirmedAddress==""||this.confirmedAddress==undefined){//默认选择第一个
 					this.confirmedAddress = this.columns[0].addr;
 					this.$router.push("/store/"+this.member_id);
 					localStorage.setItem("company_address_detail",this.confirmedAddress);
@@ -161,8 +80,9 @@
 					bus.$emit("getChooseLocationValue",this.confirmedAddress);
 					this.$router.push("/store/"+this.member_id);
 					localStorage.setItem("company_address_detail",this.confirmedAddress);
+					localStorage.setItem("longitude",this.center.lng);
+					localStorage.setItem("latitude",this.center.lat);
 				}
-				
 			}
 		},
 		mounted(){

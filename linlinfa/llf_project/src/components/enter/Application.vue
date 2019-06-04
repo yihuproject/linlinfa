@@ -58,7 +58,6 @@
 			return {
 				msg:"入驻申请",
 				imgPath:"plus",
-				// imgPath:"http://pic15.nipic.com/20110813/1993003_205156492136_2.jpg",
 				isShowImg:false,
 				member_id:null,
 				paying_amount:1000,
@@ -69,25 +68,84 @@
 			Header
 		},
 		methods:{
+      toast(){
+        this.$toast.loading({
+            duration: 0,
+            mask: true,
+            forbidClick: false,
+            message: '上传中...'
+            })
+      },
+      ontpys(img){
+            let originWidth = img.width, // 压缩后的宽
+            originHeight=img.height,
+            maxWidth = 400, maxHeight = 400,
+            quality = 0.7, // 压缩质量
+            canvas = document.createElement('canvas'),
+            drawer = canvas.getContext("2d");
+            canvas.width = maxWidth;
+            canvas.height = originHeight/originWidth*maxWidth;
+            drawer.drawImage(img, 0, 0, canvas.width, canvas.height);
+            let base64 = canvas.toDataURL("image/jpeg", quality); // 压缩后的base64图片
+            let file = this.dataURLtoFile(base64,Date.parse(Date())+'.jpg');
+            console.log(file);//压缩后的file
+            return file;
+        },
+        //base64转file
+        dataURLtoFile(dataurl,filename){
+        let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr],filename,{type:mime});
+        },
 			onRead(file){
-				if(file.file.size>=1048576){
-					this.$toast("图片大小不能超过2M");
-					this.imgPath = "plus";
-				}else{
-					var formData = new FormData();
-					formData.append("file",file.file);
-					let config = {
-						headers: {"Content-Type":"multipart/form-data"}
-					}
-					this.$axios.post("/v3/image_upload",formData,config)
-					.then((data)=>{
-						this.imgPath="http://pqk40fvkr.bkt.clouddn.com/"+data.data.data;
-						this.isShowImg = true;
-						this.paying_money_certificate = data.data.data;
-					})			
-				}
-				//upload img
-			},
+      this.toast();
+      if(file.file.size>1034333){
+        console.log(file);//未压缩的file
+        let img = new Image();
+        img.src = file.content;
+        this.dwimg=file.content;
+        let that=this;
+        img.onload=function(){
+          var successFile = that.ontpys(img);
+          console.log(that.ontpys(img));
+          var formData = new FormData();
+          formData.append("file",successFile);
+          that.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+          .then((data)=>{
+           that.isShowImg = true;
+           that.paying_money_certificate = data.data.data;
+          	that.imgPath=data.data.data;
+          	console.log(successFile);
+          	localStorage.setItem("face_img",data.data.data);
+            that.$toast().clear();
+          })
+          .catch((err)=>{
+          	console.log(that.imgPath);
+          	that.imgPath="plus";
+          })
+        }
+      }else{
+        console.log(file);//未压缩的file
+        var formData = new FormData();
+        formData.append("file",file.file);
+        this.$axios.post("/v3/image_upload",formData,{headers: {"Content-Type":"multipart/form-data"}})
+        .then((data)=>{
+         this.isShowImg = true;
+         this.paying_money_certificate = data.data.data;
+         this.imgPath=data.data.data;
+         console.log(file.file);
+         localStorage.setItem("face_img",data.data.data);
+         this.$toast().clear();
+        })
+        .catch((err)=>{
+        	console.log(this.imgPath);
+        	this.imgPath="plus";
+        })
+      }
+		},//upload img
 			next(){
 				console.log(this.member_id);
 				if(this.member_id==null||this.member_id==undefined){

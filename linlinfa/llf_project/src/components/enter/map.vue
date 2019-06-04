@@ -1,167 +1,157 @@
 <template>
-	<div>
+	<div class="chooselocation" ref="homePage">
 		<Header :title="msg"></Header>
-			<div class="data_list" ref="homePage">
-				<van-row>
-					<van-col :span="6" :offset="1">
-						<div class="container_icon" v-show="ProvinceBtnShow" @click="toggleProvince">
-							<div>
-								<van-icon name="success" v-show="CityBtnShow"></van-icon>
-								<p>{{ProvinceValue}}</p>
-							</div>
-						</div>
-					</van-col>
-					<van-col :span="6" :offset="1">
-						<div class="container_icon" v-show="CityBtnShow" @click="toggleCity">
-							<div>
-								<van-icon name="success"  v-show="AreaBtnShow"></van-icon>
-								<p>{{CityValue}}</p>
-							</div>
-						</div>
-					</van-col>
-					<van-col :span="6" :offset="1">
-						<div class="container_icon" v-show="AreaBtnShow" @click="toggleArea">
-							<div>
-								<van-icon name="success" v-show="chooseStatus"></van-icon>
-								<p>{{AreaValue}}</p>
-							</div>
-						</div>
-					</van-col>
-				</van-row>
-				<vue-better-scroll v-show="ProvinceShow"  ref="scroll1" :startY="parseInt(startY1)">
-				<ul>
-					<li @click="ProvinceClick($event,index)"  v-for="(item1,index) in items" :key="item1.id">{{item1.province}}</li>
-					<li></li>
-				</ul>
-				</vue-better-scroll>
-				<vue-better-scroll  v-show="CityShow" ref="scroll2" :startY="parseInt(startY2)">
-				<ul>
-					<li @click="CitiesClick($event,index)" v-for="(item2,index) in items[provinceIndex].children" :key="item2.id">{{item2.city}}</li>
-					<li></li>
-				</ul>
-				</vue-better-scroll>
-                <div  v-show="AreaShow" ref="scroll3" >
-                    <ul>
-                    	<li @click="AreaClick($event,index)" :key="item3.id" v-for="(item3,index) in items[provinceIndex].children[cityIndex].children">{{item3.area}}</li>
-                    	<li></li>
-                    </ul>
-                </div>
-			</div>
+		<van-cell-group class="input_lo input_center">
+				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址" @input="syncCenterAndZoom($event)"/>
+		</van-cell-group>
+		<div class="map_container" ref="map">	
+			<baidu-map :ak="ak" :center="center" :zoom="zoom"  @ready="handler"  ref="bdmap" :pinch-to-zoom="true" :dragging="true" @zoomend="syncCenterAndZoom($event)" @touchend="syncCenterAndZoom($event)" @dragend="syncCenterAndZoom($event)">
+				<bm-geolocation anchor="BMAP_ANCHOR_BOTTOM_RIGHT" :showAddressBar="true" :autoLocation="true">
+				</bm-geolocation>
+				<bm-marker :position="{lng:center.lng, lat:center.lat}" :icon="{url:icon,size:{width:48,height:48}}">
+				</bm-marker>
+				<bm-local-search :keyword="keyword"  :auto-viewport="true" :location="location" :panel="false"  style="display: none">
+				</bm-local-search>
+			</baidu-map>
+		</div>
+		<div class="van-picker">
+			<vue-better-scroll class="wrapper" ref="scroll" :startY="parseInt(startY)">
+			<van-row class="column" v-for="(column,index) in columns" :key="index">
+				<van-col :span="22">
+					<div @touchend="chooseClick(index)">
+						<p>{{column.name}}</p>
+						<p>{{column.addr}}</p>
+					</div>
+				</van-col>
+				<van-col :span="2">
+					<van-icon name="success" :class="{active:index== current}"></van-icon>
+				</van-col>
+			</van-row>
+			<van-row class="column">
+				<van-col> </van-col>
+			</van-row>
+			</vue-better-scroll>
+		</div>
+		<van-button size="large" square type="info" @click="next">确认地址</van-button>
 	</div>
 </template>
 
 <script>
-	import Header from "../../components/header"
+	import Header from "../header"
 	import bus from '../../assets/js/eventBus.js'
+	import BaiduMap from "vue-baidu-map/components/map/Map.vue"
+	import BmMarker from 'vue-baidu-map/components/overlays/Marker'
+	import BmCircle from 'vue-baidu-map/components/overlays/Circle'
+	import BmGeolocation from 'vue-baidu-map/components/controls/Geolocation.vue'
+	import BmLocalSearch from "vue-baidu-map/components/search/LocalSearch.vue"
+	import AutoComplete from "vue-baidu-map/components/others/AutoComplete.vue"
+	
 	export default{
 		data(){
 			return {
-				msg:"选择城市",
-				ProvinceValue:"请选择省…",
-				CityValue:"请选择市…",
-				AreaValue:"请选择区…",
-				locationValue:"",
-				clientHeight:"",
-				ProvinceShow:true,
-				CityShow:false,
-				AreaShow:false,
-				ProvinceBtnShow:true,
-				CityBtnShow:false,
-				AreaBtnShow:false,
-				provinceIndex:0,
-				cityIndex:0,
-				areaIndex:0,
-				chooseStatus:false,
-				startY1: 0, // 纵轴方向初始化位置
-				scrollToX1: 0,
-				scrollToY1: 0,
-				scrollToTime1: 700,
-                startY2: 0, // 纵轴方向初始化位置
-                scrollToX2: 0,
-                scrollToY2: 0,
-                scrollToTime2: 700,
-                startY3: 0, // 纵轴方向初始化位置
-                scrollToX3: 0,
-                scrollToY3: 0,
-                scrollToTime3: 700,
+				msg:"选择位置",
+				ak:"2KrGibP5ES5RSW38Rq3O0w01u5vUncXQ",
+				center: "",//当前经纬度
+				zoom: 4,//地图显示大小
+				location: "",//location
+                content:"",
+				keyword: "",//搜索关键词
+				address:"",//地图中的选中地址
+				current:0,//选中的index
+				confirmedAddress:"",
+				show: false,
+				startY: 0, // 纵轴方向初始化位置
+				scrollToX: 0,
+				scrollToY: 0,
+				scrollToTime: 700,
+				locationList:[],//用来过度赋值的数据
+				columns:[],
+				icon:"http://prh73mph5.bkt.clouddn.com/icon_lc_xhao@2x.png",
 				member_id:"",
-				items:[]
 			}
 		},
 		components:{
 			Header,
+			BaiduMap,
+			BmGeolocation,
+			BmMarker,
+			BmLocalSearch,
+			AutoComplete,
+      BmCircle
 		},
 		methods:{
-				toggleProvince(){
-					this.ProvinceShow = true;
-					this.CityShow = false;
-					this.AreaShow = false;
-				},
-				toggleCity(){
-					this.ProvinceShow = false;
-					this.CityShow = true;
-					this.AreaShow = false;
-				},
-				toggleArea(){
-					this.ProvinceShow = false;
-					this.CityShow = false;
-					this.AreaShow = true;
-				},
-				ProvinceClick(e,index){
-					this.ProvinceValue = e.currentTarget.innerText;
-					if(this.ProvinceValue){
-						this.ProvinceShow = false;
-						this.ProvinceBtnShow = true;
-						this.CityBtnShow = true;
-						this.CityShow = true;
-						this.provinceIndex = index;
-						// console.log(this.provinceIndex);
-						this.chooseStatus = false;
-					}
-				},
-				CitiesClick(e,index){
-					this.CityValue = e.currentTarget.innerText;
-					if(this.CityValue){
-						this.AreaShow = true;
-						this.AreaBtnShow = true;
-						this.CityShow = false;
-						this.cityIndex = index;
-						// console.log(this.cityIndex);
-					}
-					
-				},
-				AreaClick(e,index){
-					this.AreaValue = e.currentTarget.innerText;
-					if(this.AreaValue){
-						this.CityShow = false;
-						this.areaIndex = index;
-						this.chooseStatus = true;
-						// console.log(this.cityIndex);
-						this.locationValue = this.ProvinceValue+this.CityValue+this.AreaValue;
-					}
-					if(this.locationValue==""){
-						this.$toast("信息有误，请点击重新选择");
-					}else{
-						bus.$emit("getChooseCityValue",this.locationValue);
-						this.$router.push("/store/"+this.member_id);
-						console.log(this.locationValue);
-						console.log(this.member_id);
-						localStorage.setItem("company_address",this.locationValue);
-					}
-				},
-				scrollTo1() {
-							this.$refs.scroll1.scrollTo1(this.scrollToX1, this.scrollToY1, this.scrollToTime1);
-				},
-                scrollTo2() {
-                			this.$refs.scroll2.scrollTo2(this.scrollToX2, this.scrollToY2, this.scrollToTime2);
-                },
-                scrollTo3() {
-                			this.$refs.scroll3.scrollTo3(this.scrollToX3, this.scrollToY3, this.scrollToTime3);
-                }
+			syncCenterAndZoom (e) {
+				this.center = e.target.getCenter();
+				// this.zoom = e.target.getZoom();
+        console.log(e.target.getCenter());
+				this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ e.target.getCenter().lat +","+e.target.getCenter().lng +"&output=json&pois=1")
+				.then((data)=>{
+          console.log(data);
+					this.locationList = data;
+					this.columns = this.locationList.result.pois;
+				})
+			},
+			handler ({BMap, map}){
+        
+        var mycity = new BMap.LocalCity();
+        mycity.get(function(result){
+          console.log(result);
+        })
+        let  _this = this;  
+				if( localStorage.getItem("company_address") == null|| localStorage.getItem("company_address")== ""){
+					var geolocation = new BMap.Geolocation();
+          geolocation.enableSDKLocation();
+					geolocation.getCurrentPosition(function(r,error){
+            console.log(r);
+						// if request success ,load value
+						if(this.getStatus() == BMAP_STATUS_SUCCESS){
+							_this.center = r.point;
+              console.log(r.point);      //lat:22.546053549705483   lng:114.02597365999998  浏览器定位  22.548515,114.066112  IP定位
+						 // request baidu-map value around longtitude and latitude    113.920223,22.57831
+							_this.$jsonp("http://api.map.baidu.com/geocoder/v2/?ak=efhNFs0eQd5NA9cLUnNeIt4XwK6xvBVW&location="+ r.point.lat +","+r.point.lng +"&output=json&pois=1")
+							.then((data)=>{
+                console.log(data);
+								_this.locationList = data;
+								// set position value in column and load value into DOM
+								_this.columns = _this.locationList.result.pois;
+                // _this.position = _this.columns[0].name;
+							})
+						}else {
+							this.$toast("加载失败，请重新进入页面");
+							}        
+						},{enableHighAccuracy: true});   
+				}else{
+          var geo = new BMap.Geocoder();
+          geo.getPoint(localStorage.getItem("company_address"),function(point){
+              console.log(point);
+            _this.center = point;
+          })
+        }
+			},
+			chooseClick(index){
+				this.current = index;
+				this.confirmedAddress = this.columns[this.current].addr;
+			},
+			scrollTo() {
+				this.$refs.scroll.scrollTo(this.scrollToX, this.scrollToY, this.scrollToTime)
+			},
+			next(){
+        console.log(this.center);
+				if(this.confirmedAddress==""||this.confirmedAddress==undefined){//默认选择第一个
+					this.confirmedAddress = this.columns[0].addr;
+					this.$router.push("/store/"+this.member_id);
+					localStorage.setItem("company_address_detail",this.confirmedAddress);
+				}else{
+					bus.$emit("getChooseLocationValue",this.confirmedAddress);
+					this.$router.push("/store/"+this.member_id);
+					localStorage.setItem("company_address_detail",this.confirmedAddress);
+					localStorage.setItem("longitude",this.center.lng);
+					localStorage.setItem("latitude",this.center.lat);
+				}
+			}
 		},
 		mounted(){
-			console.log("a");
-			console.log(this.$refs.homePage);
+			this.member_id = this.$route.params.member_id;
 			var height = window.innerHeight;
 			var devicePixelRatio = window.devicePixelRatio;
 			var isAndroid = window.navigator.appVersion.match(/android/gi);
@@ -169,111 +159,109 @@
 			    if (isIPhone) {
 			        if (devicePixelRatio >= 3) {
 						// isIPhone  dpr = 3
-			            this.$refs.homePage.style.height = height - 50 + "px";
+			            this.$refs.homePage.style.height =height + "px";
+			            this.$refs.map.style.height =height*0.6 + 15 + "px";
 			        } else if (devicePixelRatio >= 2){
 						// isIPhone dpr = 2
-			            this.$refs.homePage.style.height = height -40 + "px";
+			            this.$refs.homePage.style.height = height + "px";
+						this.$refs.map.style.height =height*0.5 + 15 + "px";
 			        } else {
 						// isIPhone dpr = 1
-			            this.$refs.homePage.style.height = height - 45 + "px";
+			            this.$refs.homePage.style.height = height + "px";
+						this.$refs.map.style.height =height*0.5+ "px";
 			        }
 			    } else {
 			        //  isAndroid dpr = 1
-					this.$refs.homePage.style.height = height - 45 + "px";
+					this.$refs.homePage.style.height = height + "px";
+					this.$refs.map.style.height =height*0.5+ "px";
 			    }
-
-		},
-		created(){
-			this.member_id = this.$route.params.member_id;
-			// form data request
-			var formData = new FormData();
-			formData.append("store_id",this.member_id);
-			console.log(formData);
-			let config = {
-				headers: {"Content-Type":"application/json"}
-			}
-			this.$axios.post("/v3/area_list",formData,config).then((data)=>{
-			console.log(this.items);
-			console.log(data);
-			this.items = data.data.data;
-			})
-			
 		}
 	}
 </script>
 
 <style scoped lang="stylus">
-	div.data_list
-		width: totalWid
-		background:cwhite
+	div.chooselocation
+		width:totalWid
 		overflow:hidden
-		ul
+		.input_lo
+			position:absolute
+			z-index:100
+			top: 122px
+			left: 30px
+			width: totalWid - 60px
+			height: 80px
+			line-height: 80px
+			color:cgray3
+		.map_container
+			width: totalWid
+		.map_container>div
+			height: 100%
+		.van-picker
+			position:absolute
+			z-index:100
+			bottom: 0
+			left: 0;
+			width: totalWid + 16px
+			height: 598px
 			background:cwhite
-			li
-				width: totalWid
-				height: 88px
-				margin-left: 30px
-				line-height: 88px
-				border-bottom:1PX solid cgraye5
-				color:cblack
-				font-size:17PX
+			overflow:hidden
+			.van-row
+				border-bottom:normalBordere5
+				margin-left: 15px
 				box-sizing:border-box
-				font-weight:normal
-			li:first-child
-				border-top:1PX solid cgraye5 
-			li:last-child
-				border:none
-		.van-row
-			background:cwhite
-			height: 88px
-			.van-col
-				height: 88px
-				div.container_icon
-					width: auto
-					height: 88px
-				div.container_icon>div
-					width: auto
-					height: 60px
-					margin:14px 0
-					border:1PX solid cblue
-					box-sizing:border-box
+				height: 130px
+				.van-col
+					height: 130px
+					div
+						p
+							height:65px
+							text-align:left
+						p:first-child
+							font-size:17PX
+							color:cblack
+						p:last-child
+							font-size:15PX
+							color:cgray9
+							ellipsis()
+							width:totalWid - 80px
+							height: 40px
+				.van-icon
+					line-height: 130px
+					display:none
+					font-size:17PX
 					color:cblue
-					font-size:14PX
-					display:flex
-					flex-flow:row nowrap
-					align-items:center
-					justify-content:flex-start
-					i
-						display:inline-block
-						width: 20px
-						height: 55px
-						line-height: 60px
-						margin-left: 22px
-						text-align:left
-					p
-						display:inline-block
-						width: 122px
-						height: 60px
-						line-height: 60px
-						ellipsis()
-						margin-left: 22px
-	[data-dpr="2"] div.data_list
-		ul
-			li
-				font-size:font34
+				.van-icon.active
+					display:block
+			.van-row:last-child
+				border:none
+		.van-button
+			position:absolute
+			z-index:102
+			bottom: 0
+			left: 0
+			height: 88px;
+	[data-dpr="2"] div.chooselocation
 		.van-row
 			.van-col
 				div
-					font-size:font28
-		/div.next_btn
-			& .van-button--large
+					p:first-child
+						font-size:font34
+						color:cblack
+					p:last-child
+						font-size:font30
+						color:cgray9
+			.van-icon
 				font-size:font34
-	[data-dpr="3"] div.data_list
-		ul
-			li
+	[data-dpr="3"] div.chooselocation
+		.van-row
+			.van-col
+				div
+					p:first-child
+						font-size:font51
+						color:cblack
+					p:last-child
+						font-size:font45
+						color:cgray9
+			.van-icon
 				font-size:font51
-		.van-row
-			.van-col
-				div
-					font-size:font42
 </style>
