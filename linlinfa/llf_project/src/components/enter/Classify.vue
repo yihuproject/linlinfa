@@ -259,81 +259,63 @@ export default {
 </script>
 
 <style scoped lang="stylus">
-div.classify {
+div.classify
   width: totalWid;
   overflow: hidden;
   background: cwhite;
   height: 94vh;
-
-  div.classify_level {
+  div.classify_level 
     width: totalWid;
     position: relative;
     height: 100%;
-
-    .van-row {
+    .van-row
       height: 100%;
-
-      .van-col {
+      .van-col 
         height: 100%;
         font-size: 17PX;
-
-        ul.classify_level1_ul {
+        ul.classify_level1_ul 
           width: 200px;
           display: inline-block;
           background: cf5;
           height: 100%;
           min-height: 94vh;
-
-          li {
+          li
             width: 200px;
             height: 96px;
-
-            span {
+            span
               width: 167px;
               display: inline-block;
               margin: 30px 0;
               padding-left: 30px;
               text-align: left;
-            }
-          }
-        }
-
-        ul.classify_level2_ul {
+        ul.classify_level2_ul
           width: 229px;
           display: inline-block;
           border-right: 2px solid #e5e5e5;
           height: 100%;
           min-height: 94vh;
-
-          li {
+          li
             width: 199px;
             height: 36px;
             display: inline-block;
             padding-left: 30px;
             text-align: left;
             margin: 30px 0;
-          }
-        }
-
-        ul.classify_level3_ul {
+        ul.classify_level3_ul
           width: 289px;
           display: inline-block;
           height: 100%;
           min-height: 94vh;
-
-          li {
+          li
             width: 259px;
             height: 36px;
             display: inline-block;
             padding-left: 30px;
             text-align: left;
             margin: 30px 0;
-          }
-
-          /li.active_level1 {
+          /li.active_level1 
             background: cwhite;
-
-            span {
+            span
               width: 170px;
               display: inline-block;
               margin: 30px 0;
@@ -341,108 +323,13 @@ div.classify {
               border-left: classifyBorder;
               text-align: left;
               color: cblue;
-            }
-          }
-
-          /li.active_level2 {
+          /li.active_level2 
             color: cblue;
-          }
-
-          /li.active_level3 {
+          /li.active_level3 
             color: cblue;
-          }
-        }
-      }
-    }
-  }
-
-  /div.next_btn {
+  /div.next_btn 
     position: absolute;
     bottom: 0;
     width: totalWid;
     z-index: 102;
-  }
-}
-
-[data-dpr='1'] div.classify {
-  div.classify_level {
-    .van-row {
-      .van-col {
-        font-size: font16;
-
-        ul.classify_level1_ul {
-          li {
-            font-size: font16;
-          }
-        }
-
-        ul.classify_level2_ul {
-          li {
-            font-size: font16;
-          }
-        }
-
-        ul.classify_level3_ul {
-          li {
-            font-size: font16;
-          }
-        }
-      }
-    }
-  }
-}
-
-[data-dpr='2'] div.classify {
-  div.classify_level {
-    .van-row {
-      .van-col {
-        font-size: font34;
-
-        ul.classify_level1_ul {
-          li {
-            font-size: font34;
-          }
-        }
-
-        ul.classify_level2_ul {
-          li {
-            font-size: font34;
-          }
-        }
-
-        ul.classify_level3_ul {
-          li {
-            font-size: font34;
-          }
-        }
-      }
-    }
-  }
-}
-
-[data-dpr='3'] div.classify, div.classify_level {
-  .van-row {
-    .van-col {
-      font-size: font50;
-
-      ul.classify_level1_ul {
-        li {
-          font-size: font50;
-        }
-      }
-
-      ul.classify_level2_ul {
-        li {
-          font-size: font50;
-        }
-      }
-
-      ul.classify_level3_ul {
-        li {
-          font-size: font50;
-        }
-      }
-    }
-  }
-}
 </style>

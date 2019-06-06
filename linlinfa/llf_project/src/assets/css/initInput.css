@@ -187,7 +187,14 @@ div.van-toast.van-toast--text div{
 [data-dpr="3"] .van-button.van-button--info{
 	font-size:51PX;
 }
-/* baidu-map baidu LOGO */
-.anchorBL{
-	display: none;
-}
+/* vue-amap baidu LOGO */
+	.map_container .amap-logo{
+    display: none;
+  }
+  .map_container .amap-copyright{
+    display: none!important;
+  }
+ .map_container .amap-marker-content{
+    display: none!important;
+  }
+  

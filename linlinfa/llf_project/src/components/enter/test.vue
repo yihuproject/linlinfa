@@ -1,22 +1,17 @@
 <template>
 	<div class="chooselocation">
 		<Header :title="msgs"></Header>
-<!-- 		<van-cell-group class="input_lo input_center">
-				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址" @input="syncCenterAndZoom($event)"/>
-		</van-cell-group> -->
-		<div class="map_container">	
-    <el-amap-search-box class="search-box" :search-option="searchOption" :on-search-result="onSearchResult"></el-amap-search-box>
-     <el-amap ref="map" class="map" vid="amapDemo"  :amap-manager="amapManager" :center="center" :zoom="zoom"  :events="events">
-       <el-amap-marker  :position="marker" v-for="marker in markers"></el-amap-marker>
-      </el-amap>
-		</div>
+		<van-cell-group class="input_lo input_center">
+				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址"/>
+		</van-cell-group>
+		<div class="map_container" ref="container"></div><!-- 地图容器 -->
 		<div class="van-picker">
 			<vue-better-scroll class="wrapper" ref="scroll" :startY="parseInt(startY)">
 			<van-row class="column" v-for="(column,index) in columns" :key="index">
 				<van-col :span="22">
 					<div @touchend="chooseClick(index)">
 						<p>{{column.name}}</p>
-						<p>{{column.addr}}</p>
+						<p>{{column.address}}</p>
 					</div>
 				</van-col>
 				<van-col :span="2">
@@ -33,81 +28,35 @@
 </template>
 
 <script>
-  import VueAMap from 'vue-amap'
 	import Header from "../header"
 	import bus from '../../assets/js/eventBus.js'
+  import AMapJS from "amap-js"
 	export default{
 		data(){
 			return {
-        amapManager:"",
 				msgs:"选择位置",
-				ak:"2KrGibP5ES5RSW38Rq3O0w01u5vUncXQ",
+				ak:"08f75ded02d665398f83a1542ce4643f",
 				center: [121.59996, 31.197646],//当前经纬度
-        markers: [
-                  [121.59996, 31.197646],
-                  [121.40018, 31.197622],
-                  [121.69991, 31.207649]
-                ],
-				zoom: 12,//地图显示大小
-				location: "",//location
-        content:"",
-				keyword: "",//搜索关键词
+        marker:[121.59996, 31.197646],
+        keyword:"",
+				zoom: 16,//地图显示大小
 				address:"",//地图中的选中地址
 				current:0,//选中的index
 				confirmedAddress:"",
-				show: false,
 				startY: 0, // 纵轴方向初始化位置
 				scrollToX: 0,
 				scrollToY: 0,
 				scrollToTime: 700,
-				locationList:[],//用来过度赋值的数据
 				columns:[],
-				icon:"http://prh73mph5.bkt.clouddn.com/icon_lc_xhao@2x.png",
 				member_id:"",
-        events:{
-          init:(o)=>{
-            console.log(o);
-            this.amapManager = new VueAMap.AMapManager();
-            console.log(o.getCenter());
-            // console.log(typeof(o.getCurrentPosition));
-            console.log(this.$refs.map.$$getInstance());
-            new AMap.Marker({
-            position: [123.59996, 22.177646]
-          }).setMap(this.amapManager.getMap());
-          o.getCity(result=>{
-            console.log(result);
-          })
-            // o.getCurrentPosition((status, result) => {
-              // console.log(status,result);
-                  // if (result && result.position) {
-                  //   self.lng = result.position.lng;
-                  //   self.lat = result.position.lat;
-                  //   self.center = [self.lng, self.lat];
-                  //   self.loaded = true;
-                  //   self.$nextTick();
-                  // }
-            // }
-          },
-          'moveend':()=>{
-            alert("moveend");
-          },
-          'zoomchange':()=>{
-            alert("zoomchange");
-          },
-          'click':()=>{
-            // alert("clicked");
-          }
-          
-        },
-        searchOption: {
-            city: '上海',
-            citylimit: true
-          },
+        aMapJSAPILoader: null,
+        aMapUILoader: null,
+        geolocation:null,
+        address:""
 			}
 		},
 		components:{
-			Header,
-      VueAMap
+			Header
 		},
 		methods:{
 			chooseClick(index){
@@ -130,44 +79,213 @@
 					localStorage.setItem("longitude",this.center.lng);
 					localStorage.setItem("latitude",this.center.lat);
 				}
+        // this.map && this.map.destroy();
 			},
-      onSearchResult(pois) {
-        console.log(pois);
-          // let latSum = 0;
-          // let lngSum = 0;
-          // if (pois.length > 0) {
-          //   pois.forEach(poi => {
-          //     let {lng, lat} = poi;
-          //     lngSum += lng;
-          //     latSum += lat;
-          //     this.markers.push([poi.lng, poi.lat]);
-          //   });
-          //   let center = {
-          //     lng: lngSum / pois.length,
-          //     lat: latSum / pois.length
-          //   };
-          //   this.mapCenter = [center.lng, center.lat];
-          // }
-        }
+      markerPoi(){
+        var marker = new AMap.Marker({
+          position:this.marker
+        })
+        this.map.add(marker);
+      },
+      serachInfo(str){
+        var that = this;
+        AMap.plugin(['AMap.PlaceSearch'],function(){
+          var placeSearch = new AMap.PlaceSearch();
+          placeSearch.search(str,function(status,data){
+            // console.log(data.poiList);
+            if(data.poiList.count!=0){
+              console.log("存在");
+              var poi = [data.poiList.pois[0].location.lng,data.poiList.pois[0].location.lat];
+              that.center = poi;
+              that.marker = poi;
+              that.columns = data.poiList.pois;
+              that.map.setCenter(that.center);
+              that.map.setZoom(that.zoom);
+            }else{
+              return
+            }
+            // that.map.clearMap();
+            // that.markerPoi();
+          })
+        })
+      },
+      geolo(){
+        this.geolocation = new AMap.Geolocation({
+          enableHighAccuracy: true,//是否使用高精度定位，默认:true
+          timeout: 5000,          //超过10秒后停止定位，默认：5s
+          buttonPosition:'RB',    //定位按钮的停靠位置
+          buttonOffset: new AMap.Pixel(10, 20),//定位按钮与设置的停靠位置的偏移量，默认：Pixel(10, 20)
+          zoomToAccuracy: true,   //定位成功后 是否自动调整地图视野到定位点
+          useNative:true,
+          extensions:"all"
+        })
+        this.map.addControl(this.geolocation);
+      }
 		},
-		mounted(){
-			this.member_id = this.$route.params.member_id;
-      VueAMap.initAMapApiLoader({
-        key: 'f41fddd3346f7ec6d561ad285f5aa624',
-        plugin: [
-          'AMap.Autocomplete',
-           'AMap.PlaceSearch', 
-           'AMap.Scale', 
-           'AMap.OverView',
-            'AMap.ToolBar', 
-            'AMap.MapType',
-             'AMap.PolyEditor',
-              'AMap.CircleEditor',
-              ],
-        v: '1.4.4',
-        uiVersion: '1.0.11' // 版本号
+    watch: {
+      keyword(newValue, oldValue) {
+        var that = this;
+        console.log(newValue);
+        if(newValue<oldValue){
+          return
+        }else{
+          if(this.address){
+            var a = this.address.indexOf("市");
+            var b = this.address.indexOf("省");
+            var getCity = this.address.slice(b+1,a);
+            AMap.plugin(['AMap.CitySearch'],function(){
+              var citysearch = new AMap.CitySearch();
+               citysearch.getLocalCity(function(status, result) {
+                AMap.plugin(['AMap.Autocomplete'],function(){
+                  var autoComplete = new AMap.Autocomplete({city:getCity});
+                  autoComplete.search(newValue,function(status,result){
+                    if(result.tips[0].id==""){
+                      return
+                    }else{
+                      that.columns = result.tips;
+                      var poi = [result.tips[0].location.lng,result.tips[0].location.lat];
+                      that.center = poi;
+                      that.marker = poi;
+                      that.columns = result;
+                      that.map.setCenter(that.center);
+                      that.map.setZoom(that.zoom);
+                    }
+                  })
+                })
+               })
+            })
+          }else{
+            AMap.plugin(['AMap.CitySearch'],function(){
+              var citysearch = new AMap.CitySearch();
+               citysearch.getLocalCity(function(status, result) {
+                AMap.plugin(['AMap.Autocomplete'],function(){
+                  var autoComplete = new AMap.Autocomplete({city:result.city});
+                  autoComplete.search(newValue,function(status,result){
+                    console.log(result);
+                    that.columns = result.tips;
+                    that.map.setCenter(result.tips[0].location);
+                  })
+                })
+               })
+            })
+
+          }
+        }
+      }
+    },
+    mounted(){
+      var that = this;
+      this.aMapJSAPILoader = new AMapJS.AMapJSAPILoader({
+        v: "1.4.12",
+        key: "08f75ded02d665398f83a1542ce4643f"
+      });//引入AMap
+      this.aMapUILoader = new AMapJS.AMapUILoader({
+        v: "1.0" // UI组件库版本号
+      });//引入AMapUI
+      console.log("a");
+      if(!this.aMapJSAPILoader){
+        location.reload(true);
+        console.log(this.aMapJSAPILoader);
+      }
+      console.log(this.aMapJSAPILoader);
+      console.log("b");
+      that.aMapJSAPILoader.load().then(AMap=>{
+        console.log(AMap);
+        that.aMapUILoader.load().then(initAMapUI=>{
+          console.log(initAMapUI);
+          that.AMap = AMap;
+          that.AMapUI = initAMapUI();
+          console.log(that.aMapJSAPILoader);
+          that.AMapUI.loadUI(['misc/PositionPicker'], function(PositionPicker) {
+            console.log(that.aMapJSAPILoader);
+            that.map = new AMap.Map(that.$refs.container,{
+              resizeEnable: true, //是否监控地图容器尺寸变化
+              center:that.center,
+              zoom:that.zoom
+            })//实例化地图
+            
+            
+            var positionPicker = new PositionPicker({
+              mode: 'dragMap',
+              map: that.map
+            });
+            positionPicker.on('success', function(positionResult) {
+              that.columns = positionResult.regeocode.pois;
+              // console.log(positionResult.regeocode.pois);
+            });
+            positionPicker.start();
+            console.log(AMap.event);
+            console.log(positionPicker);
+
+            that.map.clearMap();
+            that.markerPoi();
+            // console.log(that.map);
+            //
+            that.address = "";//四川省成都市金堂县
+            // this.address = localStorage.getItem("company_address");
+            
+            if(that.address){//如果存在数据，则使用数据定位周边和编码
+              that.map.on("complete",function(){
+              that.serachInfo(that.address);
+              })
+              that.map.plugin(['AMap.Geolocation'],function(){
+                that.geolo();
+              })
+            }else{//否则进入页面自动定位
+              that.map.on("complete",function(){
+                that.map.plugin(['AMap.Geolocation'],function(){
+                  that.geolo();
+                  that.geolocation.getCurrentPosition(function(status,result){//初始精确自动定位
+                    console.log(status,result);
+                    var poi = [result.position.lng,result.position.lat];
+                    that.center = poi;
+                    that.marker = poi;
+                    that.columns = result.pois;
+                    that.map.clearMap();
+                    that.markerPoi();
+                    that.map.setCenter(that.center);
+                    that.map.setZoom(that.zoom);
+                  })
+                })
+              })
+            }//判断进入页面是否传值
+            
+        })//添加PositionPicker监听
+
+
+        })
+        .catch(err=>{
+          console.log(err);
+        })
+      })
+      .catch(err=>{
+          console.log(err);
+      })
+      .finally(function() {
+        console.log("s");
+          if(!this.AMap){
+            location.reload(true);
+          }
+          console.log("");
       });
-		}
+
+
+// this.aMapJSAPILoader.load()
+//   .then(function(AMap) {
+//     // 请求成功
+//     console.log("s");
+//   })
+//   .catch(function(e) {
+//     console.log("d");
+//     // 请求失败
+//   })
+//   .finally(function() {
+//     console.log("a");
+//     // 总是执行
+//   });
+
+
+    }//mounted
 	}
 </script>
 
@@ -188,8 +306,6 @@
 		.map_container
 			width: totalWid
 			height: 50vh
-			.map
-				height: 100%
 		.van-picker
 			position:absolute
 			z-index:100

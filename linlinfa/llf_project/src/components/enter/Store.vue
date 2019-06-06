@@ -337,7 +337,8 @@
         localStorage.setItem("contacts_phone",this.contactNumber);
       },
       clocation(){
-        this.$router.push("/chooselo/"+this.member_id);
+        // this.$router.push("/chooselo/"+this.member_id);
+        this.$router.push("/test");
         localStorage.setItem("company_name",this.storeName);
         localStorage.setItem("contacts_name",this.contactName);
         localStorage.setItem("contacts_phone",this.contactNumber);
@@ -468,7 +469,7 @@ div#app
 							color:cgray9
 							font-size:17PX
 					& .tag_location
-						width: 390px
+						width: 405px
 						height: 88px
 						text-align:right
 						padding-right: 15px

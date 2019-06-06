@@ -19,8 +19,8 @@
 			<van-row class="column" v-for="(column,index) in columns" :key="index">
 				<van-col :span="22">
 					<div @touchend="chooseClick(index)">
-						<p>{{column.name}}</p>
-						<p>{{column.addr}}</p>
+						<p class="column_name">{{column.name}}</p>
+						<p class="column_addr">{{column.addr}}</p>
 					</div>
 				</van-col>
 				<van-col :span="2">
@@ -52,7 +52,7 @@
 				msg:"选择位置",
 				ak:"2KrGibP5ES5RSW38Rq3O0w01u5vUncXQ",
 				center: "",//当前经纬度
-				zoom: 4,//地图显示大小
+				zoom: 16,//地图显示大小
 				location: "",//location
                 content:"",
 				keyword: "",//搜索关键词
@@ -152,29 +152,6 @@
 		},
 		mounted(){
 			this.member_id = this.$route.params.member_id;
-			var height = window.innerHeight;
-			var devicePixelRatio = window.devicePixelRatio;
-			var isAndroid = window.navigator.appVersion.match(/android/gi);
-			var isIPhone = window.navigator.appVersion.match(/iphone/gi);
-			    if (isIPhone) {
-			        if (devicePixelRatio >= 3) {
-						// isIPhone  dpr = 3
-			            this.$refs.homePage.style.height =height + "px";
-			            this.$refs.map.style.height =height*0.6 + 15 + "px";
-			        } else if (devicePixelRatio >= 2){
-						// isIPhone dpr = 2
-			            this.$refs.homePage.style.height = height + "px";
-						this.$refs.map.style.height =height*0.5 + 15 + "px";
-			        } else {
-						// isIPhone dpr = 1
-			            this.$refs.homePage.style.height = height + "px";
-						this.$refs.map.style.height =height*0.5+ "px";
-			        }
-			    } else {
-			        //  isAndroid dpr = 1
-					this.$refs.homePage.style.height = height + "px";
-					this.$refs.map.style.height =height*0.5+ "px";
-			    }
 		}
 	}
 </script>
@@ -182,6 +159,7 @@
 <style scoped lang="stylus">
 	div.chooselocation
 		width:totalWid
+		height: 94.5vh
 		overflow:hidden
 		.input_lo
 			position:absolute
@@ -194,6 +172,7 @@
 			color:cgray3
 		.map_container
 			width: totalWid
+			height: 50vh
 		.map_container>div
 			height: 100%
 		.van-picker
@@ -202,7 +181,7 @@
 			bottom: 0
 			left: 0;
 			width: totalWid + 16px
-			height: 598px
+			height: 46.5vh
 			background:cwhite
 			overflow:hidden
 			.van-row
@@ -219,6 +198,7 @@
 						p:first-child
 							font-size:17PX
 							color:cblack
+							ellipsis()
 						p:last-child
 							font-size:15PX
 							color:cgray9

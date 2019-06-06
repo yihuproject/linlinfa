@@ -30,11 +30,10 @@ export default new Router({
     	name: 'test',
       path: '/test',
       component: Test
-    },
-    {
-    	name: 'map',
-      path: '/map',
-      component: Map
+      // beforeEnter:(to,from,next)=>{
+      //   // next();
+      //   // location.reload(true);
+      // }
     },
 		{
 			name: 'enter',
