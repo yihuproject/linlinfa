@@ -199,6 +199,7 @@
                 that.map.plugin(['AMap.Geolocation'],function(){
                   that.geolo();
                   that.geolocation.getCurrentPosition(function(status,result){//初始精确自动定位
+                  console.log(result);
                     var poi = [result.position.lng,result.position.lat];
                     that.center = poi;
                     that.marker = poi;

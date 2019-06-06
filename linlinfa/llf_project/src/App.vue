@@ -18,5 +18,4 @@ export default {
   #app
     margin-top: 88px
     width: 100vw
-    width: 100%
 </style>
