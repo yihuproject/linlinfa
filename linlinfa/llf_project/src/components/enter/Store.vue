@@ -338,7 +338,7 @@
       },
       clocation(){
         // this.$router.push("/chooselo/"+this.member_id);
-        this.$router.push("/test");
+        this.$router.push("/chooselo/"+this.member_id);
         localStorage.setItem("company_name",this.storeName);
         localStorage.setItem("contacts_name",this.contactName);
         localStorage.setItem("contacts_phone",this.contactNumber);

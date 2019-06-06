@@ -4,7 +4,9 @@
 		<van-cell-group class="input_lo input_center">
 				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址"/>
 		</van-cell-group>
-		<div class="map_container" ref="container"></div><!-- 地图容器 -->
+		<div class="map_container" ref="container">
+      <button v-if="reloadbtn" class="reloadbtn" @click="reload($event)">加载失败请刷新页面</button>
+    </div><!-- 地图容器 -->
 		<div class="van-picker">
 			<vue-better-scroll class="wrapper" ref="scroll" :startY="parseInt(startY)">
 			<van-row class="column" v-for="(column,index) in columns" :key="index">
@@ -38,6 +40,8 @@
 				ak:"08f75ded02d665398f83a1542ce4643f",
 				center: [121.59996, 31.197646],//当前经纬度
         marker:[121.59996, 31.197646],
+        returnCenter:{lng:null,lat:null},
+        reloadbtn:true,
         keyword:"",
 				zoom: 16,//地图显示大小
 				address:"",//地图中的选中地址
@@ -59,9 +63,16 @@
 			Header
 		},
 		methods:{
+      reload(e){
+        location.reload(true);
+        e.style.display = "none";
+      },
 			chooseClick(index){
 				this.current = index;
-				this.confirmedAddress = this.columns[this.current].addr;
+        this.returnCenter.lng = this.columns[this.current].location.lng;
+        this.returnCenter.lat = this.columns[this.current].location.lat;
+				this.confirmedAddress = this.columns[this.current].address;
+        console.log(this.returnCenter,this.confirmedAddress);
 			},
 			scrollTo() {
 				this.$refs.scroll.scrollTo(this.scrollToX, this.scrollToY, this.scrollToTime)
@@ -76,8 +87,8 @@
 					bus.$emit("getChooseLocationValue",this.confirmedAddress);
 					this.$router.push("/store/"+this.member_id);
 					localStorage.setItem("company_address_detail",this.confirmedAddress);
-					localStorage.setItem("longitude",this.center.lng);
-					localStorage.setItem("latitude",this.center.lat);
+					localStorage.setItem("longitude",this.returnCenter.lng);
+					localStorage.setItem("latitude",this.returnCenter.lat);
 				}
         // this.map && this.map.destroy();
 			},
@@ -86,28 +97,6 @@
           position:this.marker
         })
         this.map.add(marker);
-      },
-      serachInfo(str){
-        var that = this;
-        AMap.plugin(['AMap.PlaceSearch'],function(){
-          var placeSearch = new AMap.PlaceSearch();
-          placeSearch.search(str,function(status,data){
-            // console.log(data.poiList);
-            if(data.poiList.count!=0){
-              console.log("存在");
-              var poi = [data.poiList.pois[0].location.lng,data.poiList.pois[0].location.lat];
-              that.center = poi;
-              that.marker = poi;
-              that.columns = data.poiList.pois;
-              that.map.setCenter(that.center);
-              that.map.setZoom(that.zoom);
-            }else{
-              return
-            }
-            // that.map.clearMap();
-            // that.markerPoi();
-          })
-        })
       },
       geolo(){
         this.geolocation = new AMap.Geolocation({
@@ -120,12 +109,34 @@
           extensions:"all"
         })
         this.map.addControl(this.geolocation);
+      },
+      searchCity(city,value){
+        var that = this;
+        AMap.plugin(['AMap.CitySearch'],function(){
+          var citysearch = new AMap.CitySearch();
+           citysearch.getLocalCity(function(status, result) {
+            AMap.plugin(['AMap.Autocomplete'],function(){
+              if(!city){
+                city = result.city;
+              }
+              var autoComplete = new AMap.Autocomplete({city:city});
+              autoComplete.search(value,function(status,result){
+                var poi = [result.tips[0].location.lng,result.tips[0].location.lat];
+                that.center = poi;
+                that.marker = poi;
+                that.columns = result.tips;
+                that.map.setCenter(result.tips[0].location);
+                that.map.setZoom(that.zoom);
+              })
+            })
+           })
+        })
       }
 		},
     watch: {
       keyword(newValue, oldValue) {
         var that = this;
-        console.log(newValue);
+        that.address = "";
         if(newValue<oldValue){
           return
         }else{
@@ -133,42 +144,9 @@
             var a = this.address.indexOf("市");
             var b = this.address.indexOf("省");
             var getCity = this.address.slice(b+1,a);
-            AMap.plugin(['AMap.CitySearch'],function(){
-              var citysearch = new AMap.CitySearch();
-               citysearch.getLocalCity(function(status, result) {
-                AMap.plugin(['AMap.Autocomplete'],function(){
-                  var autoComplete = new AMap.Autocomplete({city:getCity});
-                  autoComplete.search(newValue,function(status,result){
-                    if(result.tips[0].id==""){
-                      return
-                    }else{
-                      that.columns = result.tips;
-                      var poi = [result.tips[0].location.lng,result.tips[0].location.lat];
-                      that.center = poi;
-                      that.marker = poi;
-                      that.columns = result;
-                      that.map.setCenter(that.center);
-                      that.map.setZoom(that.zoom);
-                    }
-                  })
-                })
-               })
-            })
+            this.searchCity(getCity,newValue);
           }else{
-            AMap.plugin(['AMap.CitySearch'],function(){
-              var citysearch = new AMap.CitySearch();
-               citysearch.getLocalCity(function(status, result) {
-                AMap.plugin(['AMap.Autocomplete'],function(){
-                  var autoComplete = new AMap.Autocomplete({city:result.city});
-                  autoComplete.search(newValue,function(status,result){
-                    console.log(result);
-                    that.columns = result.tips;
-                    that.map.setCenter(result.tips[0].location);
-                  })
-                })
-               })
-            })
-
+            this.searchCity("",newValue);
           }
         }
       }
@@ -182,51 +160,35 @@
       this.aMapUILoader = new AMapJS.AMapUILoader({
         v: "1.0" // UI组件库版本号
       });//引入AMapUI
-      console.log("a");
-      if(!this.aMapJSAPILoader){
-        location.reload(true);
-        console.log(this.aMapJSAPILoader);
-      }
-      console.log(this.aMapJSAPILoader);
-      console.log("b");
       that.aMapJSAPILoader.load().then(AMap=>{
-        console.log(AMap);
+        that.reloadbtn = false;
         that.aMapUILoader.load().then(initAMapUI=>{
-          console.log(initAMapUI);
           that.AMap = AMap;
           that.AMapUI = initAMapUI();
-          console.log(that.aMapJSAPILoader);
           that.AMapUI.loadUI(['misc/PositionPicker'], function(PositionPicker) {
-            console.log(that.aMapJSAPILoader);
             that.map = new AMap.Map(that.$refs.container,{
               resizeEnable: true, //是否监控地图容器尺寸变化
               center:that.center,
               zoom:that.zoom
             })//实例化地图
-            
-            
+            that.map.on('dragstart', function(){
+              
+            });
             var positionPicker = new PositionPicker({
               mode: 'dragMap',
               map: that.map
             });
             positionPicker.on('success', function(positionResult) {
               that.columns = positionResult.regeocode.pois;
-              // console.log(positionResult.regeocode.pois);
             });
             positionPicker.start();
-            console.log(AMap.event);
-            console.log(positionPicker);
-
             that.map.clearMap();
             that.markerPoi();
-            // console.log(that.map);
-            //
-            that.address = "";//四川省成都市金堂县
-            // this.address = localStorage.getItem("company_address");
-            
+            // that.address = "";//四川省成都市金堂县
+            that.address = localStorage.getItem("company_address")||"";
             if(that.address){//如果存在数据，则使用数据定位周边和编码
               that.map.on("complete",function(){
-              that.serachInfo(that.address);
+                that.searchCity("",that.address);
               })
               that.map.plugin(['AMap.Geolocation'],function(){
                 that.geolo();
@@ -236,7 +198,6 @@
                 that.map.plugin(['AMap.Geolocation'],function(){
                   that.geolo();
                   that.geolocation.getCurrentPosition(function(status,result){//初始精确自动定位
-                    console.log(status,result);
                     var poi = [result.position.lng,result.position.lat];
                     that.center = poi;
                     that.marker = poi;
@@ -249,7 +210,6 @@
                 })
               })
             }//判断进入页面是否传值
-            
         })//添加PositionPicker监听
 
 
@@ -261,30 +221,6 @@
       .catch(err=>{
           console.log(err);
       })
-      .finally(function() {
-        console.log("s");
-          if(!this.AMap){
-            location.reload(true);
-          }
-          console.log("");
-      });
-
-
-// this.aMapJSAPILoader.load()
-//   .then(function(AMap) {
-//     // 请求成功
-//     console.log("s");
-//   })
-//   .catch(function(e) {
-//     console.log("d");
-//     // 请求失败
-//   })
-//   .finally(function() {
-//     console.log("a");
-//     // 总是执行
-//   });
-
-
     }//mounted
 	}
 </script>
@@ -306,6 +242,9 @@
 		.map_container
 			width: totalWid
 			height: 50vh
+			.reloadbtn
+				margin-top: 46%
+				margin-left: 33%
 		.van-picker
 			position:absolute
 			z-index:100
@@ -326,13 +265,13 @@
 						p
 							height:65px
 							text-align:left
+							ellipsis()
 						p:first-child
 							font-size:17PX
 							color:cblack
 						p:last-child
 							font-size:15PX
 							color:cgray9
-							ellipsis()
 							width:totalWid - 80px
 							height: 40px
 				.van-icon
