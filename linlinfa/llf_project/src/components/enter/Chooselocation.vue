@@ -4,9 +4,7 @@
 		<van-cell-group class="input_lo input_center">
 				 <van-field left-icon="search" v-model="keyword" placeholder="请输入您的店铺地址"/>
 		</van-cell-group>
-		<div class="map_container" ref="container">
-      <button v-if="reloadbtn" class="reloadbtn" @click="reload($event)">加载失败请刷新页面</button>
-    </div><!-- 地图容器 -->
+		<div class="map_container" ref="container"></div><!-- 地图容器 -->
 		<div class="van-picker">
 			<vue-better-scroll class="wrapper" ref="scroll" :startY="parseInt(startY)">
 			<van-row class="column" v-for="(column,index) in columns" :key="index">
@@ -32,7 +30,7 @@
 <script>
 	import Header from "../header"
 	import bus from '../../assets/js/eventBus.js'
-  import AMapJS from "amap-js"
+  import { lazyAMapApiLoaderInstance } from 'vue-amap'
 	export default{
 		data(){
 			return {
@@ -53,14 +51,16 @@
 				scrollToTime: 700,
 				columns:[],
 				member_id:"",
-        aMapJSAPILoader: null,
-        aMapUILoader: null,
+        AMap: null,
+        AMapUI: null,
         geolocation:null,
-        address:""
+        address:"",
+        map:null
 			}
 		},
 		components:{
-			Header
+			Header,
+      lazyAMapApiLoaderInstance
 		},
 		methods:{
       reload(e){
@@ -154,75 +154,60 @@
     mounted(){
       var that = this;
       this.member_id = this.$route.params.member_id;
-      this.aMapJSAPILoader = new AMapJS.AMapJSAPILoader({
-        v: "1.4.12",
-        key: "08f75ded02d665398f83a1542ce4643f"
-      });//引入AMap
-      this.aMapUILoader = new AMapJS.AMapUILoader({
-        v: "1.0" // UI组件库版本号
-      });//引入AMapUI
-      that.aMapJSAPILoader.load().then(AMap=>{
-        that.reloadbtn = false;
-        that.aMapUILoader.load().then(initAMapUI=>{
-          that.AMap = AMap;
-          that.AMapUI = initAMapUI();
-          that.AMapUI.loadUI(['misc/PositionPicker'], function(PositionPicker) {
-            that.map = new AMap.Map(that.$refs.container,{
-              resizeEnable: true, //是否监控地图容器尺寸变化
-              center:that.center,
-              zoom:that.zoom
-            })//实例化地图
-            that.map.on('dragstart', function(){
-              
-            });
-            var positionPicker = new PositionPicker({
-              mode: 'dragMap',
-              map: that.map
-            });
-            positionPicker.on('success', function(positionResult) {
-              that.columns = positionResult.regeocode.pois;
-            });
-            positionPicker.start();
-            that.map.clearMap();
-            that.markerPoi();
-            // that.address = "";//四川省成都市金堂县
-            that.address = localStorage.getItem("company_address")||"";
-            if(that.address){//如果存在数据，则使用数据定位周边和编码
-              that.map.on("complete",function(){
-                that.searchCity("",that.address);
-              })
-              that.map.plugin(['AMap.Geolocation'],function(){
-                that.geolo();
-              })
-            }else{//否则进入页面自动定位
-              that.map.on("complete",function(){
+      lazyAMapApiLoaderInstance.load().then(() => {
+        that.AMap = AMap;
+        that.AMapUI = AMapUI;
+        that.AMap = AMap;
+        that.AMapUI = AMapUI;
+         that.AMapUI.loadUI(['misc/PositionPicker'], function(PositionPicker) {
+          that.map = new AMap.Map(that.$refs.container,{
+                resizeEnable: true, //是否监控地图容器尺寸变化
+                center:that.center,
+                zoom:that.zoom
+              })//实例化地图
+              that.map.on('dragstart', function(){
+                
+              });
+              var positionPicker = new PositionPicker({
+                mode: 'dragMap',
+                map: that.map
+              });
+              positionPicker.on('success', function(positionResult) {
+                that.columns = positionResult.regeocode.pois;
+              });
+              positionPicker.start();
+              that.map.clearMap();
+              that.markerPoi();
+              // that.address = "";//四川省成都市金堂县
+              that.address = localStorage.getItem("company_address")||"";
+              if(that.address){//如果存在数据，则使用数据定位周边和编码
+                that.map.on("complete",function(){
+                  that.searchCity("",that.address);
+                })
                 that.map.plugin(['AMap.Geolocation'],function(){
                   that.geolo();
-                  that.geolocation.getCurrentPosition(function(status,result){//初始精确自动定位
-                  console.log(result);
-                    var poi = [result.position.lng,result.position.lat];
-                    that.center = poi;
-                    that.marker = poi;
-                    that.columns = result.pois;
-                    that.map.clearMap();
-                    that.markerPoi();
-                    that.map.setCenter(that.center);
-                    that.map.setZoom(that.zoom);
+                })
+              }else{//否则进入页面自动定位
+                that.map.on("complete",function(){
+                  that.map.plugin(['AMap.Geolocation'],function(){
+                    that.geolo();
+                    that.geolocation.getCurrentPosition(function(status,result){//初始精确自动定位
+                      console.log(result);
+                      var poi = [result.position.lng,result.position.lat];
+                      that.center = poi;
+                      that.marker = poi;
+                      that.columns = result.pois;
+                      that.map.clearMap();
+                      that.markerPoi();
+                      that.map.setCenter(that.center);
+                      that.map.setZoom(that.zoom);
+                    })
                   })
                 })
-              })
-            }//判断进入页面是否传值
-        })//添加PositionPicker监听
-
-
-        })
-        .catch(err=>{
-          console.log(err);
-        })
-      })
-      .catch(err=>{
-          console.log(err);
-      })
+              }//判断进入页面是否传值
+          })//添加PositionPicker监听
+        
+      });
     }//mounted
 	}
 </script>

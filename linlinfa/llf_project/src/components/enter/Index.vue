@@ -1,5 +1,5 @@
 <template>
-	<div class="enter" ref="homePage">
+	<div class="enter">
 		<Header :title="msg" history="0"></Header>
 		<div class="banner">
 			<van-button type="info" size="normal" @click="next">我要入驻</van-button>
@@ -72,8 +72,6 @@
 						"stepImg":"http://prh73mph5.bkt.clouddn.com/icon_bnt_yyzz@2x.png"
 					}
 				],
-				clientHeight:null,
-				clientWidth:null,
 			}
 		},
 		components:{
@@ -81,16 +79,10 @@
 		},
 		mounted(){
 			this.member_id = this.$route.params.member_id;
-			this.clientHeight = window.screen.height;
-			this.clientWidth = window.screen.width;
-			console.log(this.clientHeight);
-			console.log(this.clientWidth);
 		},
 		methods: {
 			next() {
 				this.$router.push("/store/"+this.member_id);
-				console.log(this.$router);
-				console.log(this.$route.params);
 			}
 		},
 	}

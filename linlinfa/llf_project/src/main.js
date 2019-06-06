@@ -16,7 +16,7 @@ import 'vant/lib/index.css'
 // Vue.use(BaiduMap, {
 //   ak: '2KrGibP5ES5RSW38Rq3O0w01u5vUncXQ'
 // })
-// import VueAMap from 'vue-amap'
+import VueAMap from 'vue-amap'
 import VueBetterScroll from 'vue2-better-scroll'
 axios.defaults.withCredentials = false
 axios.defaults.baseURL = 'http://47.111.27.189:88'
@@ -24,27 +24,25 @@ axios.defaults.headers = {'Content-Type':'application/x-www-form-urlencoded'}//�
 Vue.config.productionTip = false
 Vue.use(Vant)
 Vue.use(VueJsonp)
-// Vue.use(VueAMap)
+Vue.use(VueAMap)
 Vue.use(VueBetterScroll)
 Vue.prototype.$axios = axios
 Vue.prototype.$qs = qs
-
-// console.log(VueAMap.AMapManager);
-// VueAMap.initAMapApiLoader({
-//   key: 'cc057120de66c43f0499244a1a187e0c',
-//   plugin: [
-//     'AMap.Autocomplete',
-//      'AMap.PlaceSearch', 
-//      'AMap.Scale', 
-//      'AMap.OverView',
-//       'AMap.ToolBar', 
-//       'AMap.MapType',
-//        'AMap.PolyEditor',
-//         'AMap.CircleEditor',
-//         ],
-//   v: '1.4.4',
-//   uiVersion: '1.0.11' // 版本号
-// });
+VueAMap.initAMapApiLoader({
+  key: '08f75ded02d665398f83a1542ce4643f',
+  plugin: [
+    'AMap.Autocomplete',
+     'AMap.PlaceSearch', 
+     'AMap.Scale', 
+     'AMap.OverView',
+      'AMap.ToolBar', 
+      'AMap.MapType',
+       'AMap.PolyEditor',
+        'AMap.CircleEditor',
+        ],
+  v: '1.4.4',
+  uiVersion: '1.0.11' // 版本号 ui
+});
 
 // Vue.prototype.HOST = '/api'
 new Vue({
